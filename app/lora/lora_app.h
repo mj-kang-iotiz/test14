@@ -12,6 +12,9 @@
  */
 
 #include "lora.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "task.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -21,6 +24,10 @@
 typedef struct {
     lora_t lora;                    /**< LoRa 핸들 (lib/lora) - 태스크/큐 포함 */
     bool enabled;                   /**< 활성화 상태 */
+
+    /* 이벤트 버스 연동 */
+    QueueHandle_t event_queue;      /**< 이벤트 버스에서 받은 이벤트 큐 */
+    TaskHandle_t event_task;        /**< 이벤트 처리 태스크 */
 } lora_app_t;
 
 /*===========================================================================

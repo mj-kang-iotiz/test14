@@ -2,6 +2,20 @@
  * @file deferred_work.h
  * @brief Deferred Work Queue - blocking 작업을 별도 태스크에서 순차 처리
  *
+ * @deprecated 이 모듈은 더 이상 사용하지 않습니다.
+ *             대신 event_bus_subscribe_with_queue()를 사용하세요.
+ *
+ *             새로운 방식:
+ *             1. 모듈이 자체 이벤트 큐 생성
+ *             2. event_bus_subscribe_with_queue(EVENT_TYPE, my_queue)로 구독
+ *             3. 모듈의 자체 태스크에서 큐 처리 (블로킹 OK)
+ *
+ *             예시: lora_app.c의 lora_event_task 참조
+ *
+ * ============================================================================
+ * [DEPRECATED - 아래는 이전 방식의 문서입니다]
+ * ============================================================================
+ *
  * Event Bus와 독립적으로 동작하며, 시간이 오래 걸리는 작업
  * (UART 송신 후 응답 대기, TCP 전송 등)을 단일 Worker Task에서 처리합니다.
  *

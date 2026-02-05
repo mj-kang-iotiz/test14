@@ -19,15 +19,16 @@
 #include "log.h"
 
 /*===========================================================================
- * 이벤트 핸들러 선언
- *===========================================================================*/
-static void on_rtcm_for_lora(const event_t *event, void *user_data);
-
-/*===========================================================================
  * 태스크 선언
  *===========================================================================*/
 static void lora_process_task(void *pvParameter);
 static void lora_tx_task(void *pvParameter);
+static void lora_event_task(void *pvParameter);
+
+/*===========================================================================
+ * 이벤트 처리 함수 선언
+ *===========================================================================*/
+static void handle_rtcm_for_lora(const event_t *event);
 
 /**
  * @brief LoRa P2P BASE 모드 초기화 명령어
@@ -979,6 +980,23 @@ void lora_instance_init(void)
     return;
   }
 
+  // 이벤트 큐 생성 (이벤트 버스에서 받은 이벤트용)
+  instance.event_queue = xQueueCreate(8, sizeof(event_t));
+  if (instance.event_queue == NULL)
+  {
+    LOG_ERR("LORA 이벤트 큐 생성 실패");
+    return;
+  }
+
+  // 이벤트 처리 태스크 생성
+  ret = xTaskCreate(lora_event_task, "lora_evt", 1024,
+                    NULL, tskIDLE_PRIORITY + 2, &instance.event_task);
+  if (ret != pdPASS)
+  {
+    LOG_ERR("LORA 이벤트 Task 생성 실패");
+    return;
+  }
+
   instance.lora.initialized = true;
   instance.enabled = true;
 
@@ -1340,11 +1358,11 @@ void lora_app_start(void)
     lora_instance_init();
   }
 
-  /* Base 모드일 때만 RTCM 이벤트 구독 */
+  /* Base 모드일 때만 RTCM 이벤트 구독 (큐 기반) */
   if (config->lora_mode == LORA_MODE_BASE)
   {
-    event_bus_subscribe(EVENT_RTCM_FOR_LORA, on_rtcm_for_lora, NULL);
-    LOG_INFO("RTCM 이벤트 구독 완료");
+    event_bus_subscribe_with_queue(EVENT_RTCM_FOR_LORA, instance.event_queue);
+    LOG_INFO("RTCM 이벤트 구독 완료 (큐 기반)");
   }
 
   LOG_INFO("LoRa 앱 시작 완료");
@@ -1359,7 +1377,7 @@ void lora_app_stop(void)
   /* 이벤트 구독 해제 */
   if (config->lora_mode == LORA_MODE_BASE)
   {
-    event_bus_unsubscribe(EVENT_RTCM_FOR_LORA, on_rtcm_for_lora);
+    event_bus_unsubscribe_queue(EVENT_RTCM_FOR_LORA, instance.event_queue);
   }
 
   /* 인스턴스 정리 */
@@ -1417,18 +1435,16 @@ void lora_app_set_p2p_recv_callback(lora_p2p_recv_callback_t callback, void *use
 }
 
 /*===========================================================================
- * 이벤트 핸들러 구현
+ * 이벤트 태스크 및 핸들러 구현
  *===========================================================================*/
 
 /**
- * @brief RTCM 전송 이벤트 핸들러
+ * @brief RTCM 전송 이벤트 처리
  *
- * GPS에서 RTCM 수신 시 이벤트 버스를 통해 호출됨
+ * lora_event_task에서 호출됨 - 블로킹 작업 가능
  */
-static void on_rtcm_for_lora(const event_t *event, void *user_data)
+static void handle_rtcm_for_lora(const event_t *event)
 {
-  (void)user_data;
-
   if (!instance.lora.initialized || !instance.lora.init_complete)
   {
     LOG_WARN("LoRa not ready, skipping RTCM");
@@ -1444,6 +1460,38 @@ static void on_rtcm_for_lora(const event_t *event, void *user_data)
     return;
   }
 
-  /* RTCM 데이터를 LoRa로 전송 */
+  /* RTCM 데이터를 LoRa로 전송 (블로킹 OK) */
   rtcm_send_to_lora(gps);
+}
+
+/**
+ * @brief LoRa 이벤트 처리 태스크
+ *
+ * 이벤트 버스에서 받은 이벤트를 처리하는 전용 태스크.
+ * 블로킹 작업(UART 전송 대기 등)을 수행해도 다른 모듈에 영향 없음.
+ */
+static void lora_event_task(void *pvParameter)
+{
+  (void)pvParameter;
+  event_t event;
+
+  LOG_INFO("LoRa 이벤트 태스크 시작");
+
+  while (1)
+  {
+    /* 이벤트 큐에서 대기 */
+    if (xQueueReceive(instance.event_queue, &event, portMAX_DELAY) == pdTRUE)
+    {
+      switch (event.type)
+      {
+      case EVENT_RTCM_FOR_LORA:
+        handle_rtcm_for_lora(&event);
+        break;
+
+      default:
+        LOG_WARN("Unknown event type: 0x%04X", event.type);
+        break;
+      }
+    }
+  }
 }
