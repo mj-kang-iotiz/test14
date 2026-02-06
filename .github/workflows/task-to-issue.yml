@@ -1,0 +1,25 @@
+name: Task to Issue
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - 'tasks/archive/**'
+
+jobs:
+  create-issue:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create issues from archived tasks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: bash .github/scripts/create-issue-from-task.sh

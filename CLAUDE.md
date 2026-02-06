@@ -165,10 +165,22 @@ lib/gps/rtcm.c               → test/module/test_gps_rtcm.c
 ## Task Workflow
 작업 요청은 `tasks/` 폴더의 md 파일로 관리.
 - `tasks/*.md` - 진행할 작업
-- `tasks/archive/` - 완료된 작업
+- `tasks/archive/` - 완료된 작업 (GitHub Issue로 자동 등록됨)
 
-작업 파일 형식:
+### 작업 흐름
+```
+1. tasks/xxx.md 작성 (계획)
+2. 코드 작업 + tasks/xxx.md → tasks/archive/xxx.md 이동
+3. PR 생성 → 머지
+4. [자동] GitHub Issue 생성 (closed) — 작업 이력 기록
+```
+
+### 작업 파일 형식
 ```markdown
+---
+type: refactor          # refactor|optimization|cleanup|feature|bugfix|migration
+modules: [gps, ble]    # gps|ble|lora|gsm|ntrip|rs485|rs232|fdcan|led|system
+---
 # [작업 제목]
 
 ## 요약
@@ -190,6 +202,17 @@ lib/gps/rtcm.c               → test/module/test_gps_rtcm.c
 ## 참고
 관련 문서, 링크 등
 ```
+
+### Front-matter 필드
+- `type`: 작업 타입 (GitHub Issue 라벨로 변환)
+- `modules`: 관련 모듈 목록 (`mod:` 접두사 라벨로 변환)
+- front-matter 없으면 `관련 파일` 섹션에서 모듈 자동 감지
+
+### GitHub Issue 자동화
+- PR 머지 시 `tasks/archive/` 에 새 파일이 있으면 GitHub Action이 자동 실행
+- 태스크 내용으로 Issue 생성 → 즉시 closed (작업 이력 기록용)
+- 설정: `.github/workflows/task-to-issue.yml`
+- 라벨 초기 설정: `bash .github/scripts/setup-labels.sh` (1회)
 
 ## Related Documents
 - `docs/hw_spec.md`: 하드웨어 스펙

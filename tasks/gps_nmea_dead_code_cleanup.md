@@ -1,3 +1,7 @@
+---
+type: cleanup
+modules: [gps]
+---
 # NMEA Dead Code 정리 및 미등록 메시지 처리 개선
 
 ## 요약
