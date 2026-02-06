@@ -6,6 +6,9 @@
 #   2. cppcheck      : 정적 분석 (버퍼 오버플로우, null deref, leak 등)
 #   3. clang-format  : 코드 스타일 일관성 검사
 #   4. clang-tidy    : 심층 정적 분석 (bugprone, cert, analyzer)
+#
+# 검사 범위: Core/, lib/, app/, config/, test/
+# 제외: Drivers/, third_party/, test/unity/, app/*_port.c, flash_params.c
 ###############################################################################
 
 name: CI
@@ -166,9 +169,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      - name: Run clang-tidy
+      - name: Run clang-tidy (lib/ + test/)
         run: |
-          # Source files compiled by test cmake (lib/ + test/ excluding unity)
+          # Files compiled by test cmake → use compile_commands.json
           SOURCE_FILES=$(find lib/ test/ \
             -path 'test/unity' -prune -o \
             -name '*.c' -print \
@@ -192,9 +195,52 @@ jobs:
 
           if [ "$FAILED" -eq 1 ]; then
             echo ""
-            echo "clang-tidy found issues. See above for details."
-            echo "Fix: clang-tidy -p test/build --fix <file>"
+            echo "clang-tidy found issues in lib/test. See above for details."
             exit 1
           fi
 
-          echo "No issues found."
+          echo "lib/ + test/ clean."
+
+      - name: Run clang-tidy (app/)
+        run: |
+          # App logic files → use -- flags with mock headers
+          # Exclude: *_port.c (LL driver), flash_params.c (HAL flash)
+          APP_FILES=$(find app/ \
+            -name '*_port.c' -prune -o \
+            -name 'flash_params.c' -prune -o \
+            -name '*.c' -print \
+            2>/dev/null | sort)
+
+          if [ -z "$APP_FILES" ]; then
+            echo "No app source files found."
+            exit 0
+          fi
+
+          TIDY_FLAGS="-- -std=c11 \
+            -I test/mock \
+            -I app/core -I app/ble -I app/gps -I app/gsm \
+            -I app/lora -I app/rs485 -I app/params \
+            -I lib/ble -I lib/gps -I lib/gsm -I lib/lora \
+            -I lib/rs485 -I lib/led -I lib/log -I lib/parser \
+            -I lib/utils/inc \
+            -I config -I Core/Inc \
+            -D USE_HAL_DRIVER -D STM32H562xx"
+
+          echo "Analyzing $(echo "$APP_FILES" | wc -l) app files..."
+
+          FAILED=0
+          for f in $APP_FILES; do
+            echo "::group::$f"
+            if ! eval clang-tidy "$f" --quiet $TIDY_FLAGS 2>&1; then
+              FAILED=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "clang-tidy found issues in app/. See above for details."
+            exit 1
+          fi
+
+          echo "app/ clean."
