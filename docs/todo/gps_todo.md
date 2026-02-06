@@ -4,9 +4,9 @@
 > 작업 완료 시 'tasks/archive' 폴더로 이동
 
 ## 확인 필요
-- [ ] GGA raw 패킷 저장하는 로직 개선방안 확인 (다수의 외부 통신으로(ble, ntrip 등) 전송 필요)
-- [ ] NMEA는 GGA, THS만 파싱
-- [ ] gps_parser.c에서 gps_parser_process 파싱 로직 성능이 괜찮은지, 정상인지 확인
+- [x] GGA raw 패킷 저장하는 로직 개선방안 확인 → `tasks/gps_gga_raw_refactor.md`
+- [x] NMEA는 GGA, THS만 파싱 → `tasks/gps_nmea_dead_code_cleanup.md`
+- [x] gps_parser.c에서 gps_parser_process 파싱 로직 성능이 괜찮은지, 정상인지 확인 → `tasks/gps_parser_optimization.md`
 - [ ] gps_hal_ops_t 는 low level 한 ops인데, 인터페이스 이렇게 구성하면 되는지 확인
 - [ ] gps_hal_ops_t 가지고 hw 초기화 하는 부분이 결합도가 높으므로 어떻게 구성하는게 좋은지 확인
 - [ ] 각종 try_parse 로직 및 성능이 좋은지 확인
