@@ -1,0 +1,246 @@
+###############################################################################
+# CI Pipeline - GUGU MACHINE GUIDANCE V2
+#
+# Jobs (all run in parallel):
+#   1. host-test     : CMake + Unity 호스트 테스트
+#   2. cppcheck      : 정적 분석 (버퍼 오버플로우, null deref, leak 등)
+#   3. clang-format  : 코드 스타일 일관성 검사
+#   4. clang-tidy    : 심층 정적 분석 (bugprone, cert, analyzer)
+#
+# 검사 범위: Core/, lib/, app/, config/, test/
+# 제외: Drivers/, third_party/, test/unity/, app/*_port.c, flash_params.c
+###############################################################################
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths-ignore:
+      - 'docs/**'
+      - 'tasks/**'
+      - '*.md'
+      - 'LICENSE'
+  push:
+    branches: [main, master, develop]
+    paths-ignore:
+      - 'docs/**'
+      - 'tasks/**'
+      - '*.md'
+      - 'LICENSE'
+
+###############################################################################
+# Job 1: Host Test (Unity + CMake)
+###############################################################################
+jobs:
+  host-test:
+    name: Host Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake gcc
+
+      - name: Run tests
+        run: bash test/run_tests.sh
+
+  ###############################################################################
+  # Job 2: cppcheck
+  ###############################################################################
+  cppcheck:
+    name: cppcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck
+        run: |
+          cppcheck \
+            --enable=warning,style,performance,portability \
+            --std=c11 \
+            --platform=unix32 \
+            --suppressions-list=.cppcheck-suppressions \
+            --inline-suppr \
+            --error-exitcode=1 \
+            --force \
+            -I lib/parser \
+            -I lib/utils/inc \
+            -I lib/gps \
+            -I lib/ble \
+            -I lib/gsm \
+            -I lib/lora \
+            -I lib/rs485 \
+            -I lib/led \
+            -I lib/log \
+            -I config \
+            -I Core/Inc \
+            -I test/mock \
+            -D USE_HAL_DRIVER \
+            -D STM32H562xx \
+            --output-file=cppcheck-report.txt \
+            -i test/unity \
+            Core/Src/ Core/Inc/ lib/ app/ config/ test/
+
+      - name: Show results
+        if: always()
+        run: |
+          if [ -s cppcheck-report.txt ]; then
+            echo "::group::cppcheck findings"
+            cat cppcheck-report.txt
+            echo "::endgroup::"
+          else
+            echo "No issues found."
+          fi
+
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cppcheck-report
+          path: cppcheck-report.txt
+
+  ###############################################################################
+  # Job 3: clang-format
+  ###############################################################################
+  clang-format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+
+      - name: Check formatting
+        run: |
+          # Find all project C/H files (exclude vendor & Unity)
+          FILES=$(find Core/Src/ Core/Inc/ lib/ app/ config/ test/ \
+            -path 'test/unity' -prune -o \
+            \( -name '*.c' -o -name '*.h' \) -print \
+            2>/dev/null | sort)
+
+          if [ -z "$FILES" ]; then
+            echo "No source files found to check."
+            exit 0
+          fi
+
+          echo "Checking $(echo "$FILES" | wc -l) files..."
+
+          FAILED=0
+          for f in $FILES; do
+            if ! clang-format --style=file --dry-run --Werror "$f" 2>/dev/null; then
+              echo "::error file=$f::Formatting differs from .clang-format"
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "============================================"
+            echo "Fix: clang-format -i --style=file <files>"
+            echo "Or:  find lib/ app/ -name '*.c' -o -name '*.h' | xargs clang-format -i --style=file"
+            echo "============================================"
+            exit 1
+          fi
+
+          echo "All files formatted correctly."
+
+  ###############################################################################
+  # Job 4: clang-tidy
+  ###############################################################################
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc clang-tidy
+
+      - name: Generate compile_commands.json
+        run: |
+          cmake -B test/build -S test \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Run clang-tidy (lib/ + test/)
+        run: |
+          # Files compiled by test cmake → use compile_commands.json
+          SOURCE_FILES=$(find lib/ test/ \
+            -path 'test/unity' -prune -o \
+            -name '*.c' -print \
+            2>/dev/null | sort)
+
+          if [ -z "$SOURCE_FILES" ]; then
+            echo "No source files found."
+            exit 0
+          fi
+
+          echo "Analyzing $(echo "$SOURCE_FILES" | wc -l) files..."
+
+          FAILED=0
+          for f in $SOURCE_FILES; do
+            echo "::group::$f"
+            if ! clang-tidy -p test/build "$f" --quiet 2>&1; then
+              FAILED=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "clang-tidy found issues in lib/test. See above for details."
+            exit 1
+          fi
+
+          echo "lib/ + test/ clean."
+
+      - name: Run clang-tidy (app/)
+        run: |
+          # App logic files → use -- flags with mock headers
+          # Exclude: *_port.c (LL driver), flash_params.c (HAL flash)
+          APP_FILES=$(find app/ \
+            -name '*_port.c' -prune -o \
+            -name 'flash_params.c' -prune -o \
+            -name '*.c' -print \
+            2>/dev/null | sort)
+
+          if [ -z "$APP_FILES" ]; then
+            echo "No app source files found."
+            exit 0
+          fi
+
+          TIDY_FLAGS="-- -std=c11 \
+            -I test/mock \
+            -I app/core -I app/ble -I app/gps -I app/gsm \
+            -I app/lora -I app/rs485 -I app/params \
+            -I lib/ble -I lib/gps -I lib/gsm -I lib/lora \
+            -I lib/rs485 -I lib/led -I lib/log -I lib/parser \
+            -I lib/utils/inc \
+            -I config -I Core/Inc \
+            -D USE_HAL_DRIVER -D STM32H562xx"
+
+          echo "Analyzing $(echo "$APP_FILES" | wc -l) app files..."
+
+          FAILED=0
+          for f in $APP_FILES; do
+            echo "::group::$f"
+            if ! eval clang-tidy "$f" --quiet $TIDY_FLAGS 2>&1; then
+              FAILED=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "clang-tidy found issues in app/. See above for details."
+            exit 1
+          fi
+
+          echo "app/ clean."

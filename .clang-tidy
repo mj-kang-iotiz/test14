@@ -1,0 +1,42 @@
+###############################################################################
+# GUGU MACHINE GUIDANCE V2 - Clang-Tidy Configuration
+#
+# Embedded C focused checks:
+#   - bugprone-*: 잠재적 버그 패턴
+#   - cert-*: CERT C 코딩 표준
+#   - clang-analyzer-*: 정적 분석 (null deref, dead store 등)
+#   - misc-*: 기타 유용한 체크
+#   - readability-*: 가독성
+#   - performance-*: 성능
+###############################################################################
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  cert-*,
+  -cert-dcl37-c,
+  -cert-dcl51-c,
+  clang-analyzer-*,
+  misc-*,
+  -misc-unused-parameters,
+  performance-*,
+  readability-braces-around-statements,
+  readability-inconsistent-declaration-parameter-name,
+  readability-misleading-indentation,
+  readability-non-const-parameter,
+  readability-redundant-declaration,
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '(lib|app|config)/.*\.h$'
+
+CheckOptions:
+  - key: bugprone-assert-side-effect.AssertMacros
+    value: 'DEV_ASSERT'
+  - key: bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value: 'int8_t'
+  - key: cert-str34-c.DiagnoseSignedUnsignedCharComparisons
+    value: false
+
+FormatStyle: file

@@ -17,5 +17,13 @@ static inline BaseType_t xQueueReceive(QueueHandle_t q, void *buf, TickType_t t)
     (void)q; (void)buf; (void)t; return pdFALSE;
 }
 static inline void vQueueDelete(QueueHandle_t q) { (void)q; }
+static inline BaseType_t xQueueSendFromISR(QueueHandle_t q, const void *item,
+                                           BaseType_t *pxHigherPriorityTaskWoken) {
+    (void)q; (void)item; (void)pxHigherPriorityTaskWoken; return pdTRUE;
+}
+static inline BaseType_t xQueueReceiveFromISR(QueueHandle_t q, void *buf,
+                                              BaseType_t *pxHigherPriorityTaskWoken) {
+    (void)q; (void)buf; (void)pxHigherPriorityTaskWoken; return pdFALSE;
+}
 
 #endif /* QUEUE_H */
