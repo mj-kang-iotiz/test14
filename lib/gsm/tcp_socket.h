@@ -30,8 +30,8 @@ tcp_socket_t *tcp_socket_create(gsm_t *gsm, uint8_t connect_id);
  * @param timeout_ms 타임아웃 (ms)
  * @return int 0: 성공, -1: 실패
  */
-int tcp_connect(tcp_socket_t *sock, uint8_t context_id, const char *remote_ip,
-                uint16_t remote_port, uint32_t timeout_ms);
+int tcp_connect(tcp_socket_t *sock, uint8_t context_id, const char *remote_ip, uint16_t remote_port,
+                uint32_t timeout_ms);
 
 /**
  * @brief TCP 데이터 전송

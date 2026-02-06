@@ -9,10 +9,10 @@
 
 #include "unity.h"
 #include "ringbuffer.h"
-#include "gps_parser.h"   /* ringbuffer_find_char */
+#include "gps_parser.h" /* ringbuffer_find_char */
 #include <string.h>
 
-#define TEST_BUF_SIZE  64
+#define TEST_BUF_SIZE 64
 
 static ringbuffer_t rb;
 static char buf[TEST_BUF_SIZE];

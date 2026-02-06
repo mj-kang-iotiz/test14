@@ -29,8 +29,7 @@ static const char GGA_RTK_FLOAT[] =
     "$GNGGA,061545.00,3723.71010,N,12657.89710,E,5,10,1.20,52.3,M,19.8,M,2.0,0000*5D\r\n";
 
 /* No fix (fix=0), empty fields */
-static const char GGA_NO_FIX[] =
-    "$GPGGA,235959.00,,,,,0,00,99.99,,M,,M,,*67\r\n";
+static const char GGA_NO_FIX[] = "$GPGGA,235959.00,,,,,0,00,99.99,,M,,M,,*67\r\n";
 
 /* 남반구 + 서반구 (S, W) */
 static const char GGA_SOUTH_WEST[] =
@@ -42,12 +41,10 @@ static const char GGA_SOUTH_WEST[] =
  *===========================================================================*/
 
 /* 정상: heading 270.5, Auto mode */
-static const char THS_VALID[] =
-    "$GPTHS,270.50,A*07\r\n";
+static const char THS_VALID[] = "$GPTHS,270.50,A*07\r\n";
 
 /* Invalid mode */
-static const char THS_INVALID_MODE[] =
-    "$GPTHS,0.00,V*10\r\n";
+static const char THS_INVALID_MODE[] = "$GPTHS,0.00,V*10\r\n";
 
 /*===========================================================================
  * 미등록 NMEA (skip 테스트용)
@@ -75,11 +72,9 @@ static const char GGA_BAD_CRC[] =
     "$GPGGA,092725.00,4717.11399,N,00833.91590,E,1,08,1.01,499.6,M,48.0,M,,*FF\r\n";
 
 /* 불완전 (CR/LF 없음) */
-static const char GGA_INCOMPLETE[] =
-    "$GPGGA,092725.00,4717.11399,N,00833";
+static const char GGA_INCOMPLETE[] = "$GPGGA,092725.00,4717.11399,N,00833";
 
 /* 필드 수 부족 (5개 필드만) */
-static const char GGA_TOO_FEW_FIELDS[] =
-    "$GPGGA,092725.00,4717.11399,N,00833.91590*07\r\n";
+static const char GGA_TOO_FEW_FIELDS[] = "$GPGGA,092725.00,4717.11399,N,00833.91590*07\r\n";
 
 #endif /* NMEA_FIXTURE_H */

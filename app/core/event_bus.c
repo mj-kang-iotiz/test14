@@ -14,9 +14,9 @@
 /*===========================================================================
  * Configuration
  *===========================================================================*/
-#define EVENT_QUEUE_SIZE        16
-#define DISPATCHER_STACK_SIZE   512
-#define DISPATCHER_PRIORITY     (tskIDLE_PRIORITY + 3)
+#define EVENT_QUEUE_SIZE      16
+#define DISPATCHER_STACK_SIZE 512
+#define DISPATCHER_PRIORITY   (tskIDLE_PRIORITY + 3)
 
 /*===========================================================================
  * Internal Types
@@ -30,8 +30,8 @@ typedef struct subscriber_node {
 /*===========================================================================
  * Internal Variables
  *===========================================================================*/
-static subscriber_node_t *subscriber_list = NULL;   /* 연결 리스트 헤드 */
-static uint8_t subscriber_count = 0;                /* 현재 구독자 수 */
+static subscriber_node_t *subscriber_list = NULL; /* 연결 리스트 헤드 */
+static uint8_t subscriber_count = 0;              /* 현재 구독자 수 */
 static SemaphoreHandle_t bus_mutex = NULL;
 
 /* Async event queue and dispatcher task */
@@ -71,12 +71,8 @@ void event_bus_init(void) {
 
     /* Create dispatcher task */
     if (dispatcher_task == NULL) {
-        BaseType_t ret = xTaskCreate(event_bus_dispatcher_task,
-                                      "evt_bus",
-                                      DISPATCHER_STACK_SIZE,
-                                      NULL,
-                                      DISPATCHER_PRIORITY,
-                                      &dispatcher_task);
+        BaseType_t ret = xTaskCreate(event_bus_dispatcher_task, "evt_bus", DISPATCHER_STACK_SIZE,
+                                     NULL, DISPATCHER_PRIORITY, &dispatcher_task);
         if (ret != pdPASS) {
             LOG_ERR("Failed to create dispatcher task");
             return;
@@ -139,8 +135,8 @@ bool event_bus_subscribe(event_type_t type, QueueHandle_t queue) {
         xSemaphoreGive(bus_mutex);
     }
 
-    LOG_DEBUG("Subscribed to event 0x%04X (%d/%d)",
-              type, subscriber_count, EVENT_BUS_MAX_SUBSCRIBERS);
+    LOG_DEBUG("Subscribed to event 0x%04X (%d/%d)", type, subscriber_count,
+              EVENT_BUS_MAX_SUBSCRIBERS);
     return true;
 }
 
@@ -157,7 +153,8 @@ void event_bus_unsubscribe(event_type_t type, QueueHandle_t queue) {
             /* Remove from list */
             if (prev == NULL) {
                 subscriber_list = curr->next;
-            } else {
+            }
+            else {
                 prev->next = curr->next;
             }
 
@@ -168,8 +165,8 @@ void event_bus_unsubscribe(event_type_t type, QueueHandle_t queue) {
                 xSemaphoreGive(bus_mutex);
             }
 
-            LOG_DEBUG("Unsubscribed from event 0x%04X (%d/%d)",
-                      type, subscriber_count, EVENT_BUS_MAX_SUBSCRIBERS);
+            LOG_DEBUG("Unsubscribed from event 0x%04X (%d/%d)", type, subscriber_count,
+                      EVENT_BUS_MAX_SUBSCRIBERS);
             return;
         }
         prev = curr;
@@ -204,7 +201,6 @@ static void event_bus_dispatcher_task(void *param) {
     while (1) {
         /* Block until event available */
         if (xQueueReceive(event_queue, &event, portMAX_DELAY) == pdTRUE) {
-
             /* Take mutex to safely iterate subscribers */
             if (bus_mutex != NULL) {
                 xSemaphoreTake(bus_mutex, portMAX_DELAY);

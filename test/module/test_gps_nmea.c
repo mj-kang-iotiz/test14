@@ -107,7 +107,7 @@ void test_gga_south_west(void) {
     TEST_ASSERT_EQUAL(PARSE_OK, r);
     TEST_ASSERT_EQUAL_CHAR('S', gps.nmea_data.gga.ns);
     TEST_ASSERT_EQUAL_CHAR('W', gps.nmea_data.gga.ew);
-    TEST_ASSERT_TRUE(gps.nmea_data.gga.lat > 0);  /* lat value is positive, direction is S */
+    TEST_ASSERT_TRUE(gps.nmea_data.gga.lat > 0); /* lat value is positive, direction is S */
 }
 
 void test_gga_updates_common_data(void) {

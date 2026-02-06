@@ -15,8 +15,7 @@ static void ble_process_parsed_result(ble_t *ble, ble_parse_result_t result);
  * 초기화 API
  *===========================================================================*/
 
-bool ble_init(ble_t *ble, const ble_hal_ops_t *ops)
-{
+bool ble_init(ble_t *ble, const ble_hal_ops_t *ops) {
     if (!ble || !ops) {
         return false;
     }
@@ -57,9 +56,9 @@ bool ble_init(ble_t *ble, const ble_hal_ops_t *ops)
     return true;
 }
 
-void ble_set_evt_handler(ble_t *ble, ble_evt_handler_t handler, void *user_data)
-{
-    if (!ble) return;
+void ble_set_evt_handler(ble_t *ble, ble_evt_handler_t handler, void *user_data) {
+    if (!ble)
+        return;
 
     ble->handler = handler;
     ble->user_data = user_data;
@@ -69,8 +68,7 @@ void ble_set_evt_handler(ble_t *ble, ble_evt_handler_t handler, void *user_data)
  * 링버퍼 API
  *===========================================================================*/
 
-void ble_rx_write(ble_t *ble, const uint8_t *data, size_t len)
-{
+void ble_rx_write(ble_t *ble, const uint8_t *data, size_t len) {
     if (!ble || !data || len == 0) {
         return;
     }
@@ -78,9 +76,9 @@ void ble_rx_write(ble_t *ble, const uint8_t *data, size_t len)
     ringbuffer_write(&ble->rx_buf, (const char *)data, len);
 }
 
-ringbuffer_t *ble_get_rx_buf(ble_t *ble)
-{
-    if (!ble) return NULL;
+ringbuffer_t *ble_get_rx_buf(ble_t *ble) {
+    if (!ble)
+        return NULL;
     return &ble->rx_buf;
 }
 
@@ -88,8 +86,7 @@ ringbuffer_t *ble_get_rx_buf(ble_t *ble)
  * 데이터 송수신 API
  *===========================================================================*/
 
-bool ble_send(ble_t *ble, const char *data, size_t len)
-{
+bool ble_send(ble_t *ble, const char *data, size_t len) {
     if (!ble || !data || len == 0) {
         return false;
     }
@@ -101,8 +98,7 @@ bool ble_send(ble_t *ble, const char *data, size_t len)
     return (ble->ops->send(data, len) == 0);
 }
 
-void ble_process_rx(ble_t *ble)
-{
+void ble_process_rx(ble_t *ble) {
     if (!ble) {
         return;
     }
@@ -122,8 +118,7 @@ void ble_process_rx(ble_t *ble)
  * AT 명령어 API
  *===========================================================================*/
 
-bool ble_enter_at_mode(ble_t *ble)
-{
+bool ble_enter_at_mode(ble_t *ble) {
     if (!ble || !ble->ops || !ble->ops->at_mode) {
         return false;
     }
@@ -133,8 +128,7 @@ bool ble_enter_at_mode(ble_t *ble)
     return true;
 }
 
-bool ble_enter_bypass_mode(ble_t *ble)
-{
+bool ble_enter_bypass_mode(ble_t *ble) {
     if (!ble || !ble->ops || !ble->ops->bypass_mode) {
         return false;
     }
@@ -144,10 +138,8 @@ bool ble_enter_bypass_mode(ble_t *ble)
     return true;
 }
 
-ble_at_status_t ble_send_at_cmd_sync(ble_t *ble, const char *cmd,
-                                      char *response, size_t response_size,
-                                      uint32_t timeout_ms)
-{
+ble_at_status_t ble_send_at_cmd_sync(ble_t *ble, const char *cmd, char *response,
+                                     size_t response_size, uint32_t timeout_ms) {
     if (!ble || !cmd) {
         return BLE_AT_STATUS_ERROR;
     }
@@ -197,7 +189,8 @@ ble_at_status_t ble_send_at_cmd_sync(ble_t *ble, const char *cmd,
     ble_at_status_t status;
     if (result != pdTRUE) {
         status = BLE_AT_STATUS_TIMEOUT;
-    } else {
+    }
+    else {
         status = ble->at_request.status;
     }
 
@@ -221,27 +214,27 @@ ble_at_status_t ble_send_at_cmd_sync(ble_t *ble, const char *cmd,
  * 상태 조회 API
  *===========================================================================*/
 
-ble_mode_t ble_get_mode(const ble_t *ble)
-{
-    if (!ble) return BLE_MODE_BYPASS;
+ble_mode_t ble_get_mode(const ble_t *ble) {
+    if (!ble)
+        return BLE_MODE_BYPASS;
     return ble->mode;
 }
 
-ble_conn_state_t ble_get_conn_state(const ble_t *ble)
-{
-    if (!ble) return BLE_CONN_DISCONNECTED;
+ble_conn_state_t ble_get_conn_state(const ble_t *ble) {
+    if (!ble)
+        return BLE_CONN_DISCONNECTED;
     return ble->conn_state;
 }
 
-void ble_set_conn_state(ble_t *ble, ble_conn_state_t state)
-{
-    if (!ble) return;
+void ble_set_conn_state(ble_t *ble, ble_conn_state_t state) {
+    if (!ble)
+        return;
     ble->conn_state = state;
 }
 
-bool ble_is_ready(const ble_t *ble)
-{
-    if (!ble) return false;
+bool ble_is_ready(const ble_t *ble) {
+    if (!ble)
+        return false;
     return ble->ready;
 }
 
@@ -249,9 +242,9 @@ bool ble_is_ready(const ble_t *ble)
  * 내부 API
  *===========================================================================*/
 
-void ble_handle_at_response(ble_t *ble, ble_parse_result_t result, const char *line)
-{
-    if (!ble || !line) return;
+void ble_handle_at_response(ble_t *ble, ble_parse_result_t result, const char *line) {
+    if (!ble || !line)
+        return;
 
     /* 동기 AT 명령 대기 중인지 확인 */
     if (!ble->at_request.active) {
@@ -269,18 +262,18 @@ void ble_handle_at_response(ble_t *ble, ble_parse_result_t result, const char *l
 
     /* 상태 업데이트 */
     switch (result) {
-        case BLE_PARSE_RESULT_AT_OK:
-        case BLE_PARSE_RESULT_AT_OTHER:  /* 기타 응답도 성공으로 처리 */
-            ble->at_request.status = BLE_AT_STATUS_COMPLETED;
-            break;
+    case BLE_PARSE_RESULT_AT_OK:
+    case BLE_PARSE_RESULT_AT_OTHER: /* 기타 응답도 성공으로 처리 */
+        ble->at_request.status = BLE_AT_STATUS_COMPLETED;
+        break;
 
-        case BLE_PARSE_RESULT_AT_ERROR:
-            ble->at_request.status = BLE_AT_STATUS_ERROR;
-            break;
+    case BLE_PARSE_RESULT_AT_ERROR:
+        ble->at_request.status = BLE_AT_STATUS_ERROR;
+        break;
 
-        default:
-            /* 연결/연결해제 등은 응답으로 처리하지 않음 */
-            return;
+    default:
+        /* 연결/연결해제 등은 응답으로 처리하지 않음 */
+        return;
     }
 
     /* 세마포어 해제 (대기 중인 태스크 깨우기) */
@@ -296,13 +289,12 @@ void ble_handle_at_response(ble_t *ble, ble_parse_result_t result, const char *l
  *
  * 파싱 완료 시 호출, AT 응답 처리 및 이벤트 발생
  */
-static void ble_process_parsed_result(ble_t *ble, ble_parse_result_t result)
-{
-    if (!ble) return;
+static void ble_process_parsed_result(ble_t *ble, ble_parse_result_t result) {
+    if (!ble)
+        return;
 
     /* 파싱된 라인 복사 */
-    strncpy(ble->line_buf, ble_parser_get_line(&ble->parser_ctx),
-            sizeof(ble->line_buf) - 1);
+    strncpy(ble->line_buf, ble_parser_get_line(&ble->parser_ctx), sizeof(ble->line_buf) - 1);
     ble->line_buf[sizeof(ble->line_buf) - 1] = '\0';
 
     /* AT 응답이면서 AT 모드일 때만 AT 응답 처리 */
@@ -316,59 +308,60 @@ static void ble_process_parsed_result(ble_t *ble, ble_parse_result_t result)
         event.timestamp_ms = xTaskGetTickCount();
 
         switch (result) {
-            case BLE_PARSE_RESULT_AT_OK:
-                event.type = BLE_EVENT_AT_OK;
-                strncpy(event.data.at_response.response, ble->line_buf,
-                        sizeof(event.data.at_response.response) - 1);
-                event.data.at_response.len = strlen(ble->line_buf);
-                break;
+        case BLE_PARSE_RESULT_AT_OK:
+            event.type = BLE_EVENT_AT_OK;
+            strncpy(event.data.at_response.response, ble->line_buf,
+                    sizeof(event.data.at_response.response) - 1);
+            event.data.at_response.len = strlen(ble->line_buf);
+            break;
 
-            case BLE_PARSE_RESULT_AT_ERROR:
-                event.type = BLE_EVENT_AT_ERROR;
-                strncpy(event.data.at_response.response, ble->line_buf,
-                        sizeof(event.data.at_response.response) - 1);
-                event.data.at_response.len = strlen(ble->line_buf);
-                break;
+        case BLE_PARSE_RESULT_AT_ERROR:
+            event.type = BLE_EVENT_AT_ERROR;
+            strncpy(event.data.at_response.response, ble->line_buf,
+                    sizeof(event.data.at_response.response) - 1);
+            event.data.at_response.len = strlen(ble->line_buf);
+            break;
 
-            case BLE_PARSE_RESULT_AT_READY:
-                event.type = BLE_EVENT_AT_READY;
-                ble->ready = true;
-                break;
+        case BLE_PARSE_RESULT_AT_READY:
+            event.type = BLE_EVENT_AT_READY;
+            ble->ready = true;
+            break;
 
-            case BLE_PARSE_RESULT_AT_CONNECTED:
-                event.type = BLE_EVENT_CONNECTED;
-                ble->conn_state = BLE_CONN_CONNECTED;
-                break;
+        case BLE_PARSE_RESULT_AT_CONNECTED:
+            event.type = BLE_EVENT_CONNECTED;
+            ble->conn_state = BLE_CONN_CONNECTED;
+            break;
 
-            case BLE_PARSE_RESULT_AT_DISCONNECTED:
-                event.type = BLE_EVENT_DISCONNECTED;
-                ble->conn_state = BLE_CONN_DISCONNECTED;
-                break;
+        case BLE_PARSE_RESULT_AT_DISCONNECTED:
+            event.type = BLE_EVENT_DISCONNECTED;
+            ble->conn_state = BLE_CONN_DISCONNECTED;
+            break;
 
-            case BLE_PARSE_RESULT_AT_ADVERTISING:
-                event.type = BLE_EVENT_ADVERTISING;
-                break;
+        case BLE_PARSE_RESULT_AT_ADVERTISING:
+            event.type = BLE_EVENT_ADVERTISING;
+            break;
 
-            case BLE_PARSE_RESULT_AT_OTHER:
-                event.type = BLE_EVENT_AT_OK;
-                strncpy(event.data.at_response.response, ble->line_buf,
-                        sizeof(event.data.at_response.response) - 1);
-                event.data.at_response.len = strlen(ble->line_buf);
-                break;
+        case BLE_PARSE_RESULT_AT_OTHER:
+            event.type = BLE_EVENT_AT_OK;
+            strncpy(event.data.at_response.response, ble->line_buf,
+                    sizeof(event.data.at_response.response) - 1);
+            event.data.at_response.len = strlen(ble->line_buf);
+            break;
 
-            case BLE_PARSE_RESULT_APP_CMD:
-                /* Bypass 모드에서만 앱 명령어 처리 */
-                if (ble->mode == BLE_MODE_BYPASS) {
-                    event.type = BLE_EVENT_APP_CMD;
-                    event.data.app_cmd.cmd = ble->line_buf;
-                    event.data.app_cmd.param = NULL;
-                } else {
-                    return;  /* AT 모드에서는 무시 */
-                }
-                break;
+        case BLE_PARSE_RESULT_APP_CMD:
+            /* Bypass 모드에서만 앱 명령어 처리 */
+            if (ble->mode == BLE_MODE_BYPASS) {
+                event.type = BLE_EVENT_APP_CMD;
+                event.data.app_cmd.cmd = ble->line_buf;
+                event.data.app_cmd.param = NULL;
+            }
+            else {
+                return; /* AT 모드에서는 무시 */
+            }
+            break;
 
-            default:
-                return;
+        default:
+            return;
         }
 
         ble->handler(ble, &event);

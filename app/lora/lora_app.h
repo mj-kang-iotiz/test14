@@ -22,25 +22,22 @@
  * LoRa 앱 인스턴스 (ble_instance_t 참고)
  *===========================================================================*/
 typedef struct {
-    lora_t lora;                    /**< LoRa 핸들 (lib/lora) - 태스크/큐 포함 */
-    bool enabled;                   /**< 활성화 상태 */
+    lora_t lora;  /**< LoRa 핸들 (lib/lora) - 태스크/큐 포함 */
+    bool enabled; /**< 활성화 상태 */
 
     /* 이벤트 버스 연동 */
-    QueueHandle_t event_queue;      /**< 이벤트 버스에서 받은 이벤트 큐 */
-    TaskHandle_t event_task;        /**< 이벤트 처리 태스크 */
+    QueueHandle_t event_queue; /**< 이벤트 버스에서 받은 이벤트 큐 */
+    TaskHandle_t event_task;   /**< 이벤트 처리 태스크 */
 } lora_app_t;
 
 /*===========================================================================
  * LoRa 작동 모드 (앱 레벨)
  *===========================================================================*/
-typedef enum {
-  LORA_WORK_MODE_LORAWAN = 0,
-  LORA_WORK_MODE_P2P = 1
-} lora_work_mode_t;
+typedef enum { LORA_WORK_MODE_LORAWAN = 0, LORA_WORK_MODE_P2P = 1 } lora_work_mode_t;
 
 typedef enum {
-  LORA_P2P_TRANSFER_MODE_RECEIVER = 1,
-  LORA_P2P_TRANSFER_MODE_SENDER = 2
+    LORA_P2P_TRANSFER_MODE_RECEIVER = 1,
+    LORA_P2P_TRANSFER_MODE_SENDER = 2
 } lora_p2p_transfer_mode_t;
 
 /*===========================================================================
@@ -111,8 +108,7 @@ bool lora_app_send_cmd_sync(const char *cmd, uint32_t timeout_ms);
  * @brief AT 명령어 전송 (비동기) - 래퍼
  */
 bool lora_app_send_cmd_async(const char *cmd, uint32_t timeout_ms, uint32_t toa_ms,
-                             lora_cmd_callback_t callback, void *user_data,
-                             bool skip_response);
+                             lora_cmd_callback_t callback, void *user_data, bool skip_response);
 
 /*===========================================================================
  * P2P 설정 API
@@ -126,8 +122,8 @@ bool lora_app_set_work_mode(lora_work_mode_t mode, uint32_t timeout_ms);
 /**
  * @brief LoRa P2P 설정
  */
-bool lora_app_set_p2p_config(uint32_t freq, uint8_t sf, uint8_t bw, uint8_t cr,
-                             uint16_t preamlen, uint8_t pwr, uint32_t timeout_ms);
+bool lora_app_set_p2p_config(uint32_t freq, uint8_t sf, uint8_t bw, uint8_t cr, uint16_t preamlen,
+                             uint8_t pwr, uint32_t timeout_ms);
 
 /**
  * @brief LoRa P2P 전송 모드 설정
@@ -162,13 +158,12 @@ lora_t *lora_get_handle(void);
 /* 기존 전역 함수 - deprecated */
 bool lora_send_command_sync(const char *cmd, uint32_t timeout_ms);
 bool lora_send_command_async(const char *cmd, uint32_t timeout_ms, uint32_t toa_ms,
-                             lora_cmd_callback_t callback, void *user_data,
-                             bool skip_response);
+                             lora_cmd_callback_t callback, void *user_data, bool skip_response);
 bool lora_send_p2p_raw_async(const uint8_t *data, size_t len, uint32_t timeout_ms,
                              lora_cmd_callback_t callback, void *user_data);
 bool lora_set_work_mode(lora_work_mode_t mode, uint32_t timeout_ms);
-bool lora_set_p2p_config(uint32_t freq, uint8_t sf, uint8_t bw, uint8_t cr,
-                         uint16_t preamlen, uint8_t pwr, uint32_t timeout_ms);
+bool lora_set_p2p_config(uint32_t freq, uint8_t sf, uint8_t bw, uint8_t cr, uint16_t preamlen,
+                         uint8_t pwr, uint32_t timeout_ms);
 bool lora_set_p2p_transfer_mode(lora_p2p_transfer_mode_t mode, uint32_t timeout_ms);
 
 #endif /* LORA_APP_H */

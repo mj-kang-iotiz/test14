@@ -9,6 +9,7 @@
 #include "gps_parser.h"
 
 parse_result_t nmea_try_parse(gps_t *gps, ringbuffer_t *rb) {
-    (void)gps; (void)rb;
+    (void)gps;
+    (void)rb;
     return PARSE_NOT_MINE;
 }

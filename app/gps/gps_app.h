@@ -11,21 +11,21 @@
 typedef void (*gps_command_callback_t)(bool success, void *user_data);
 
 typedef struct {
-  char cmd[128];                  // 전송할 명령어
-  uint32_t timeout_ms;            // 타임아웃 (ms)
-  bool is_async;                  // true: 비동기, false: 동기
+    char cmd[128];       // 전송할 명령어
+    uint32_t timeout_ms; // 타임아웃 (ms)
+    bool is_async;       // true: 비동기, false: 동기
 
-  SemaphoreHandle_t response_sem; // 응답 대기용 세마포어
-  bool *result;                   // 응답 결과 (true: OK, false: ERROR/TIMEOUT)
+    SemaphoreHandle_t response_sem; // 응답 대기용 세마포어
+    bool *result;                   // 응답 결과 (true: OK, false: ERROR/TIMEOUT)
 
-  gps_command_callback_t callback; // 완료 콜백
-  void *user_data;                 // 사용자 데이터
-  bool async_result;               // 비동기 결과 저장용
+    gps_command_callback_t callback; // 완료 콜백
+    void *user_data;                 // 사용자 데이터
+    bool async_result;               // 비동기 결과 저장용
 } gps_cmd_request_t;
 
 bool gps_send_command_sync(gps_id_t id, const char *cmd, uint32_t timeout_ms);
 bool gps_send_command_async(gps_id_t id, const char *cmd, uint32_t timeout_ms,
-                             gps_command_callback_t callback, void *user_data);
+                            gps_command_callback_t callback, void *user_data);
 
 bool gps_send_raw_data(gps_id_t id, const uint8_t *data, size_t len);
 
@@ -34,7 +34,8 @@ typedef void (*gps_init_callback_t)(bool success, void *user_data);
 bool gps_init_um982_base_async(gps_id_t id, gps_init_callback_t callback);
 bool gps_init_um982_rover_async(gps_id_t id, gps_init_callback_t callback);
 
-bool gps_configure_um982_base_mode_async(gps_id_t id, gps_init_callback_t callback, void *user_data);
+bool gps_configure_um982_base_mode_async(gps_id_t id, gps_init_callback_t callback,
+                                         void *user_data);
 
 /**
  * @brief GPS 앱 시작

@@ -18,9 +18,9 @@
 /*===========================================================================
  * 설정
  *===========================================================================*/
-#define BLE_RX_TASK_STACK_SIZE  512
-#define BLE_RX_TASK_PRIORITY    3
-#define BLE_RX_QUEUE_SIZE       16
+#define BLE_RX_TASK_STACK_SIZE 512
+#define BLE_RX_TASK_PRIORITY   3
+#define BLE_RX_QUEUE_SIZE      16
 
 /*===========================================================================
  * 내부 함수
@@ -31,8 +31,7 @@
  *
  * 링버퍼에서 데이터 읽어 파싱
  */
-static void ble_rx_task_func(void *pvParameter)
-{
+static void ble_rx_task_func(void *pvParameter) {
     ble_t *ble = (ble_t *)pvParameter;
     uint8_t dummy;
 
@@ -54,8 +53,7 @@ static void ble_rx_task_func(void *pvParameter)
  * API 구현
  *===========================================================================*/
 
-bool ble_rx_task_start(ble_t *ble)
-{
+bool ble_rx_task_start(ble_t *ble) {
     if (!ble) {
         return false;
     }
@@ -75,14 +73,8 @@ bool ble_rx_task_start(ble_t *ble)
     ble->running = true;
 
     /* RX 태스크 생성 */
-    BaseType_t ret = xTaskCreate(
-        ble_rx_task_func,
-        "ble_rx",
-        BLE_RX_TASK_STACK_SIZE,
-        ble,
-        BLE_RX_TASK_PRIORITY,
-        &ble->rx_task
-    );
+    BaseType_t ret = xTaskCreate(ble_rx_task_func, "ble_rx", BLE_RX_TASK_STACK_SIZE, ble,
+                                 BLE_RX_TASK_PRIORITY, &ble->rx_task);
 
     if (ret != pdPASS) {
         LOG_ERR("BLE RX 태스크 생성 실패");
@@ -96,8 +88,7 @@ bool ble_rx_task_start(ble_t *ble)
     return true;
 }
 
-void ble_rx_task_stop(ble_t *ble)
-{
+void ble_rx_task_stop(ble_t *ble) {
     if (!ble || !ble->running) {
         return;
     }
@@ -118,8 +109,7 @@ void ble_rx_task_stop(ble_t *ble)
     LOG_INFO("BLE RX 태스크 정지 완료");
 }
 
-QueueHandle_t ble_get_rx_queue(ble_t *ble)
-{
+QueueHandle_t ble_get_rx_queue(ble_t *ble) {
     if (!ble) {
         return NULL;
     }

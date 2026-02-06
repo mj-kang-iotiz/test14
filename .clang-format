@@ -7,7 +7,7 @@
 #   - snake_case naming
 ###############################################################################
 
-Language: C
+Language: Cpp
 BasedOnStyle: LLVM
 
 # Indentation

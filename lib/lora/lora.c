@@ -1,7 +1,7 @@
 #include "lora.h"
 
 #ifndef TAG
-    #define TAG "LORA"
+#define TAG "LORA"
 #endif
 
 #include "log.h"
@@ -11,8 +11,7 @@
  * 초기화 API
  *===========================================================================*/
 
-bool lora_init(lora_t *lora, const lora_hal_ops_t *ops)
-{
+bool lora_init(lora_t *lora, const lora_hal_ops_t *ops) {
     if (!lora) {
         LOG_ERR("NULL lora handle");
         return false;
@@ -32,8 +31,7 @@ bool lora_init(lora_t *lora, const lora_hal_ops_t *ops)
     return true;
 }
 
-void lora_deinit(lora_t *lora)
-{
+void lora_deinit(lora_t *lora) {
     if (!lora) {
         return;
     }
@@ -79,8 +77,7 @@ void lora_deinit(lora_t *lora)
  * 태스크 API (실제 구현은 lora_app.c에서)
  *===========================================================================*/
 
-void lora_task_stop(lora_t *lora)
-{
+void lora_task_stop(lora_t *lora) {
     if (!lora) {
         return;
     }
@@ -103,8 +100,7 @@ void lora_task_stop(lora_t *lora)
     lora->rx_task_ready = false;
 }
 
-QueueHandle_t lora_get_rx_queue(lora_t *lora)
-{
+QueueHandle_t lora_get_rx_queue(lora_t *lora) {
     if (!lora) {
         return NULL;
     }
@@ -115,9 +111,7 @@ QueueHandle_t lora_get_rx_queue(lora_t *lora)
  * P2P 수신 콜백 API
  *===========================================================================*/
 
-void lora_set_p2p_recv_callback(lora_t *lora, lora_p2p_recv_callback_t callback,
-                                void *user_data)
-{
+void lora_set_p2p_recv_callback(lora_t *lora, lora_p2p_recv_callback_t callback, void *user_data) {
     if (!lora) {
         return;
     }
@@ -129,8 +123,7 @@ void lora_set_p2p_recv_callback(lora_t *lora, lora_p2p_recv_callback_t callback,
  * 상태 조회 API
  *===========================================================================*/
 
-bool lora_is_ready(const lora_t *lora)
-{
+bool lora_is_ready(const lora_t *lora) {
     if (!lora) {
         return false;
     }
