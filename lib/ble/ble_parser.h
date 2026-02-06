@@ -19,25 +19,25 @@
  * 파서 컨텍스트
  *===========================================================================*/
 typedef struct {
-    ble_parse_state_t state;        /**< 현재 파싱 상태 */
-    char buf[BLE_PARSER_BUF_SIZE];  /**< 파싱 버퍼 */
-    size_t pos;                     /**< 현재 버퍼 위치 */
+    ble_parse_state_t state;       /**< 현재 파싱 상태 */
+    char buf[BLE_PARSER_BUF_SIZE]; /**< 파싱 버퍼 */
+    size_t pos;                    /**< 현재 버퍼 위치 */
 } ble_parser_ctx_t;
 
 /*===========================================================================
  * 파싱 결과
  *===========================================================================*/
 typedef enum {
-    BLE_PARSE_RESULT_NONE,          /**< 파싱 중 (더 많은 데이터 필요) */
-    BLE_PARSE_RESULT_AT_OK,         /**< +OK */
-    BLE_PARSE_RESULT_AT_ERROR,      /**< +ERROR */
-    BLE_PARSE_RESULT_AT_READY,      /**< +READY */
-    BLE_PARSE_RESULT_AT_CONNECTED,  /**< +CONNECTED */
+    BLE_PARSE_RESULT_NONE,            /**< 파싱 중 (더 많은 데이터 필요) */
+    BLE_PARSE_RESULT_AT_OK,           /**< +OK */
+    BLE_PARSE_RESULT_AT_ERROR,        /**< +ERROR */
+    BLE_PARSE_RESULT_AT_READY,        /**< +READY */
+    BLE_PARSE_RESULT_AT_CONNECTED,    /**< +CONNECTED */
     BLE_PARSE_RESULT_AT_DISCONNECTED, /**< +DISCONNECTED */
     BLE_PARSE_RESULT_AT_ADVERTISING,  /**< +ADVERTISING */
-    BLE_PARSE_RESULT_AT_OTHER,      /**< 기타 AT 응답 (+xxx) */
-    BLE_PARSE_RESULT_APP_CMD,       /**< 앱 명령어 (SD+, SC+ 등) */
-    BLE_PARSE_RESULT_OVERFLOW,      /**< 버퍼 오버플로우 */
+    BLE_PARSE_RESULT_AT_OTHER,        /**< 기타 AT 응답 (+xxx) */
+    BLE_PARSE_RESULT_APP_CMD,         /**< 앱 명령어 (SD+, SC+ 등) */
+    BLE_PARSE_RESULT_OVERFLOW,        /**< 버퍼 오버플로우 */
 } ble_parse_result_t;
 
 /*===========================================================================
@@ -87,8 +87,7 @@ const char *ble_parser_get_line(const ble_parser_ctx_t *ctx);
  * @param result 파싱 결과
  * @return true: AT 응답
  */
-static inline bool ble_parse_result_is_at(ble_parse_result_t result)
-{
+static inline bool ble_parse_result_is_at(ble_parse_result_t result) {
     return (result >= BLE_PARSE_RESULT_AT_OK && result <= BLE_PARSE_RESULT_AT_OTHER);
 }
 

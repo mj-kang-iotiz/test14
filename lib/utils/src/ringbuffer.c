@@ -3,7 +3,7 @@
 #include "dev_assert.h"
 
 #ifndef TAG
-    #define TAG "ringbuffer"
+#define TAG "ringbuffer"
 #endif
 
 #include "log.h"
@@ -74,7 +74,8 @@ size_t ringbuffer_size(ringbuffer_t *rb) {
     if (!ringbuffer_is_full(rb)) {
         if (rb->head >= rb->tail) {
             size = rb->head - rb->tail;
-        } else {
+        }
+        else {
             size = rb->size + rb->head - rb->tail;
         }
     }
@@ -92,25 +93,22 @@ void ringbuffer_write(ringbuffer_t *rb, const char *data, size_t len) {
     DEV_ASSERT(rb != NULL);
     DEV_ASSERT(data != NULL);
     DEV_ASSERT(len != 0 && len < ringbuffer_capacity(rb));
-    
+
     size_t free_space = ringbuffer_free_size(rb);
-    
-    if(len > free_space)
-    {
+
+    if (len > free_space) {
         size_t overflow_len = len - free_space;
-        rb->tail = (rb->tail + overflow_len) %  rb->size;
+        rb->tail = (rb->tail + overflow_len) % rb->size;
         rb->is_overflow = true;
         rb->overflow_cnt += overflow_len;
     }
 
     size_t first_chunk = rb->size - rb->head;
 
-    if(first_chunk >= len)
-    {
+    if (first_chunk >= len) {
         memcpy(&rb->buffer[rb->head], data, len);
     }
-    else
-    {
+    else {
         memcpy(&rb->buffer[rb->head], data, first_chunk);
         memcpy(&rb->buffer[0], data + first_chunk, len - first_chunk);
     }
@@ -118,23 +116,20 @@ void ringbuffer_write(ringbuffer_t *rb, const char *data, size_t len) {
     rb->head = (rb->head + len) % rb->size;
 }
 
-void ringbuffer_write_byte(ringbuffer_t *rb, char data)
-{
+void ringbuffer_write_byte(ringbuffer_t *rb, char data) {
     DEV_ASSERT(rb != NULL);
 
     rb->buffer[rb->head] = data;
     rb->head = (rb->head + 1) % rb->size;
 
-    if(rb->head == rb->tail)
-    {
+    if (rb->head == rb->tail) {
         rb->tail = (rb->tail + 1) % rb->size;
         rb->is_overflow = true;
         rb->overflow_cnt++;
     }
 }
 
-size_t ringbuffer_read(ringbuffer_t *rb, char *data, size_t len)
-{
+size_t ringbuffer_read(ringbuffer_t *rb, char *data, size_t len) {
     DEV_ASSERT(rb != NULL);
     DEV_ASSERT(data != NULL);
     DEV_ASSERT(len != 0 && len < ringbuffer_capacity(rb));
@@ -150,7 +145,8 @@ size_t ringbuffer_read(ringbuffer_t *rb, char *data, size_t len)
 
     if (first_chunk >= read_len) {
         memcpy(data, &rb->buffer[rb->tail], read_len);
-    } else {
+    }
+    else {
         memcpy(data, &rb->buffer[rb->tail], first_chunk);
         memcpy(data + first_chunk, &rb->buffer[0], read_len - first_chunk);
     }
@@ -163,7 +159,7 @@ size_t ringbuffer_read(ringbuffer_t *rb, char *data, size_t len)
 bool ringbuffer_read_byte(ringbuffer_t *rb, char *data) {
     DEV_ASSERT(rb != NULL);
     DEV_ASSERT(data != NULL);
-    
+
     if (ringbuffer_is_empty(rb)) {
         return false;
     }
@@ -195,7 +191,8 @@ bool ringbuffer_peek(ringbuffer_t *rb, char *data, size_t len, size_t offset) {
 
     if (!need_wrap) {
         memcpy(data, &rb->buffer[peek_start_idx], len);
-    } else {
+    }
+    else {
         size_t first_chunk = rb->size - peek_start_idx;
         size_t second_chunk = len - first_chunk;
         memcpy(data, &rb->buffer[peek_start_idx], first_chunk);
@@ -217,15 +214,13 @@ bool ringbuffer_peek_byte(ringbuffer_t *rb, char *data) {
     return true;
 }
 
-bool ringbuffer_advance(ringbuffer_t *rb, size_t len)
-{
+bool ringbuffer_advance(ringbuffer_t *rb, size_t len) {
     DEV_ASSERT(rb != NULL);
     DEV_ASSERT(len < ringbuffer_capacity(rb));
 
     size_t available = ringbuffer_size(rb);
-    
-    if(len > available)
-    {
+
+    if (len > available) {
         ringbuffer_reset(rb);
         return false;
     }
@@ -233,4 +228,3 @@ bool ringbuffer_advance(ringbuffer_t *rb, size_t len)
     rb->tail = (rb->tail + len) % rb->size;
     return true;
 }
-

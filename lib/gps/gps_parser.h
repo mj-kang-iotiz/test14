@@ -20,18 +20,18 @@
  * 파서 결과 타입
  *===========================================================================*/
 typedef enum {
-    PARSE_NOT_MINE = 0,   /**< 이 프로토콜 아님 -> 다음 파서 시도 */
-    PARSE_NEED_MORE,      /**< 내 패킷 맞지만 데이터 부족 -> 루프 탈출, 대기 */
-    PARSE_OK,             /**< 파싱 완료, advance 됨 -> 계속 루프 */
-    PARSE_INVALID,        /**< 내 패킷인데 잘못됨 (CRC 등) -> 1 byte skip */
+    PARSE_NOT_MINE = 0, /**< 이 프로토콜 아님 -> 다음 파서 시도 */
+    PARSE_NEED_MORE,    /**< 내 패킷 맞지만 데이터 부족 -> 루프 탈출, 대기 */
+    PARSE_OK,           /**< 파싱 완료, advance 됨 -> 계속 루프 */
+    PARSE_INVALID,      /**< 내 패킷인데 잘못됨 (CRC 등) -> 1 byte skip */
 } parse_result_t;
 
 /*===========================================================================
  * 명령어 응답 대기 컨텍스트
  *===========================================================================*/
 typedef struct {
-    bool waiting;                 /**< 응답 대기 중 여부 */
-    bool result_ok;               /**< 응답 결과 (OK/ERROR) */
+    bool waiting;   /**< 응답 대기 중 여부 */
+    bool result_ok; /**< 응답 결과 (OK/ERROR) */
 } gps_cmd_ctx_t;
 
 /*===========================================================================
@@ -48,17 +48,17 @@ typedef struct {
     uint32_t unknown_packets;     /**< 알 수 없는 패킷 (skip) */
 
     /* 수신 시간 추적 */
-    uint32_t last_rx_tick;        /**< 마지막 수신 tick (xTaskGetTickCount) */
-    uint32_t last_nmea_tick;      /**< 마지막 NMEA 수신 tick */
-    uint32_t last_rtcm_tick;      /**< 마지막 RTCM 수신 tick */
+    uint32_t last_rx_tick;   /**< 마지막 수신 tick (xTaskGetTickCount) */
+    uint32_t last_nmea_tick; /**< 마지막 NMEA 수신 tick */
+    uint32_t last_rtcm_tick; /**< 마지막 RTCM 수신 tick */
 } gps_parser_stats_t;
 
 /*===========================================================================
  * 파서 컨텍스트
  *===========================================================================*/
 typedef struct {
-    gps_cmd_ctx_t cmd_ctx;        /**< 명령어 응답 컨텍스트 */
-    gps_parser_stats_t stats;     /**< 파서 통계 */
+    gps_cmd_ctx_t cmd_ctx;    /**< 명령어 응답 컨텍스트 */
+    gps_parser_stats_t stats; /**< 파서 통계 */
 } gps_parser_ctx_t;
 
 /*===========================================================================
@@ -87,7 +87,7 @@ parse_result_t gps_parser_process(gps_t *gps);
  * @param gps GPS 핸들
  * @return 통계 구조체 포인터
  */
-const gps_parser_stats_t* gps_parser_get_stats(gps_t *gps);
+const gps_parser_stats_t *gps_parser_get_stats(gps_t *gps);
 
 /**
  * @brief 파서 통계 초기화

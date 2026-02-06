@@ -15,7 +15,6 @@ char *lora_port_get_recv_buf();
 void lora_port_set_queue(QueueHandle_t queue);
 
 
-
 int lora_uart3_hw_init(void);
 int lora_uart3_comm_start(void);
 int lora_uart3_send(const char *data, size_t len);

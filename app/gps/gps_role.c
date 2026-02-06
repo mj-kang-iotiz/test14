@@ -28,10 +28,10 @@
 
 #ifdef GPS_ROLE_USE_GPIO
 #include "stm32f4xx_ll_gpio.h"
-#define GPS_ROLE_GPIO_PORT    GPIOB
-#define GPS_ROLE_GPIO_PIN     LL_GPIO_PIN_12
-#define GPS_ROLE_PIN_BASE     1   /* HIGH = Base */
-#define GPS_ROLE_PIN_ROVER    0   /* LOW = Rover */
+#define GPS_ROLE_GPIO_PORT GPIOB
+#define GPS_ROLE_GPIO_PIN  LL_GPIO_PIN_12
+#define GPS_ROLE_PIN_BASE  1 /* HIGH = Base */
+#define GPS_ROLE_PIN_ROVER 0 /* LOW = Rover */
 #endif
 
 /*===========================================================================
@@ -44,56 +44,54 @@ static gps_role_t g_current_role = GPS_ROLE_UNKNOWN;
  * 공개 API
  *===========================================================================*/
 
-gps_role_t gps_role_detect(void)
-{
+gps_role_t gps_role_detect(void) {
 #ifdef GPS_ROLE_USE_GPIO
-  /* GPIO 핀 읽기 (추후 사용) */
-  uint32_t pin_state = LL_GPIO_IsInputPinSet(GPS_ROLE_GPIO_PORT, GPS_ROLE_GPIO_PIN);
+    /* GPIO 핀 읽기 (추후 사용) */
+    uint32_t pin_state = LL_GPIO_IsInputPinSet(GPS_ROLE_GPIO_PORT, GPS_ROLE_GPIO_PIN);
 
-  if (pin_state == GPS_ROLE_PIN_BASE) {
-    g_current_role = GPS_ROLE_BASE;
-  } else {
-    g_current_role = GPS_ROLE_ROVER;
-  }
+    if (pin_state == GPS_ROLE_PIN_BASE) {
+        g_current_role = GPS_ROLE_BASE;
+    }
+    else {
+        g_current_role = GPS_ROLE_ROVER;
+    }
 
-  LOG_INFO("GPS 역할 감지 (GPIO): %s (pin=%lu)",
-           gps_role_to_string(g_current_role), pin_state);
+    LOG_INFO("GPS 역할 감지 (GPIO): %s (pin=%lu)", gps_role_to_string(g_current_role), pin_state);
 #else
-  /* 빌드 타임 결정 (board_config.h 매크로 사용) */
-  #if (LORA_MODE == LORA_MODE_BASE)
+/* 빌드 타임 결정 (board_config.h 매크로 사용) */
+#if (LORA_MODE == LORA_MODE_BASE)
     g_current_role = GPS_ROLE_BASE;
-  #elif (LORA_MODE == LORA_MODE_ROVER)
+#elif (LORA_MODE == LORA_MODE_ROVER)
     g_current_role = GPS_ROLE_ROVER;
-  #else
+#else
     g_current_role = GPS_ROLE_UNKNOWN;
-  #endif
-
-  LOG_INFO("GPS 역할 (빌드 타임): %s", gps_role_to_string(g_current_role));
 #endif
 
-  return g_current_role;
+    LOG_INFO("GPS 역할 (빌드 타임): %s", gps_role_to_string(g_current_role));
+#endif
+
+    return g_current_role;
 }
 
-gps_role_t gps_role_get(void)
-{
-  return g_current_role;
+gps_role_t gps_role_get(void) {
+    return g_current_role;
 }
 
-bool gps_role_is_base(void)
-{
-  return (g_current_role == GPS_ROLE_BASE);
+bool gps_role_is_base(void) {
+    return (g_current_role == GPS_ROLE_BASE);
 }
 
-bool gps_role_is_rover(void)
-{
-  return (g_current_role == GPS_ROLE_ROVER);
+bool gps_role_is_rover(void) {
+    return (g_current_role == GPS_ROLE_ROVER);
 }
 
-const char* gps_role_to_string(gps_role_t role)
-{
-  switch (role) {
-    case GPS_ROLE_BASE:   return "Base";
-    case GPS_ROLE_ROVER:  return "Rover";
-    default:              return "Unknown";
-  }
+const char *gps_role_to_string(gps_role_t role) {
+    switch (role) {
+    case GPS_ROLE_BASE:
+        return "Base";
+    case GPS_ROLE_ROVER:
+        return "Rover";
+    default:
+        return "Unknown";
+    }
 }

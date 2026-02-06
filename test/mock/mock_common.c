@@ -23,7 +23,9 @@ uint32_t mock_tick_count = 0;
  *===========================================================================*/
 void dev_assert_failed(const char *file, int line, const char *expr, const char *msg) {
     fprintf(stderr, "\n[ASSERT FAILED] %s:%d\n", file, line);
-    if (expr) fprintf(stderr, "  expr: %s\n", expr);
-    if (msg)  fprintf(stderr, "  msg:  %s\n", msg);
+    if (expr)
+        fprintf(stderr, "  expr: %s\n", expr);
+    if (msg)
+        fprintf(stderr, "  msg:  %s\n", msg);
     abort();
 }

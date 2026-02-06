@@ -15,9 +15,9 @@
  * @brief GPS 역할 타입
  */
 typedef enum {
-  GPS_ROLE_UNKNOWN = 0,   /**< 미확인 */
-  GPS_ROLE_BASE,          /**< Base Station */
-  GPS_ROLE_ROVER          /**< Rover */
+    GPS_ROLE_UNKNOWN = 0, /**< 미확인 */
+    GPS_ROLE_BASE,        /**< Base Station */
+    GPS_ROLE_ROVER        /**< Rover */
 } gps_role_t;
 
 /**
@@ -58,6 +58,6 @@ bool gps_role_is_rover(void);
  * @param role 역할
  * @return 역할 이름 ("Base", "Rover", "Unknown")
  */
-const char* gps_role_to_string(gps_role_t role);
+const char *gps_role_to_string(gps_role_t role);
 
 #endif /* GPS_ROLE_H */

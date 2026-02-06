@@ -21,9 +21,9 @@
  * NOTE: enum 값은 GPS_NMEA_MSG_NONE(0) 다음부터 자동으로 1, 2, 3... 할당됨
  *       테이블에서는 생성된 enum 값을 명시적으로 저장하여 안전하게 매핑
  *===========================================================================*/
-#define NMEA_MSG_TABLE(X) \
-    X(GGA, "GGA", nmea_parse_gga, 14, true)  /* Global Positioning System Fix Data */ \
-    X(THS, "THS", nmea_parse_ths,  2, true)  /* True Heading and Status */ \
+#define NMEA_MSG_TABLE(X)                                                            \
+    X(GGA, "GGA", nmea_parse_gga, 14, true) /* Global Positioning System Fix Data */ \
+    X(THS, "THS", nmea_parse_ths, 2, true)  /* True Heading and Status */
 
 /*===========================================================================
  * Unicore ASCII 응답 정의 (Command Response)
@@ -32,8 +32,8 @@
  *   - str: 응답 문자열
  *===========================================================================*/
 #define UNICORE_RESP_TABLE(X) \
-    X(OK,      "OK")    \
-    X(ERROR,   "ERROR") \
+    X(OK, "OK")               \
+    X(ERROR, "ERROR")         \
     X(UNKNOWN, "")
 
 /*===========================================================================
@@ -44,9 +44,9 @@
  *   - handler: 파싱 핸들러 함수 (NULL이면 무시)
  *   - is_urc: URC 여부
  *===========================================================================*/
-#define UNICORE_BIN_MSG_TABLE(X) \
-    X(BESTNAV,  2118, unicore_bin_parse_bestnav,  true)  /* Best GNSS position & velocity */ \
-    X(HEADING2, 2120, NULL,                       true)  /* Dual-antenna heading */ \
+#define UNICORE_BIN_MSG_TABLE(X)                                                          \
+    X(BESTNAV, 2118, unicore_bin_parse_bestnav, true) /* Best GNSS position & velocity */ \
+    X(HEADING2, 2120, NULL, true)                     /* Dual-antenna heading */
 
 
 /*===========================================================================
@@ -58,18 +58,18 @@
  *
  * 참고: RTCM은 raw 전송만 하므로 핸들러 불필요
  *===========================================================================*/
-#define RTCM_MSG_TABLE(X) \
-    X(MSM4_GPS,     1074, "GPS MSM4")        \
-    X(MSM4_GLONASS, 1084, "GLONASS MSM4")    \
-    X(MSM4_GALILEO, 1094, "Galileo MSM4")    \
-    X(MSM4_BEIDOU,  1124, "BeiDou MSM4")     \
+#define RTCM_MSG_TABLE(X)                 \
+    X(MSM4_GPS, 1074, "GPS MSM4")         \
+    X(MSM4_GLONASS, 1084, "GLONASS MSM4") \
+    X(MSM4_GALILEO, 1094, "Galileo MSM4") \
+    X(MSM4_BEIDOU, 1124, "BeiDou MSM4")   \
     X(STATION_INFO, 1005, "Station Position")
 
 /*===========================================================================
  * 프로토콜 상수
  *===========================================================================*/
-#define GPS_MAX_PACKET_LEN      512   // 최대 패킷 길이 (Unicore Binary)
-#define GPS_NMEA_MAX_LEN        120   // NMEA 최대 길이
-#define GPS_UNICORE_ASCII_MAX   128   // Unicore ASCII 최대 길이
+#define GPS_MAX_PACKET_LEN    512 // 최대 패킷 길이 (Unicore Binary)
+#define GPS_NMEA_MAX_LEN      120 // NMEA 최대 길이
+#define GPS_UNICORE_ASCII_MAX 128 // Unicore ASCII 최대 길이
 
 #endif /* GPS_PROTO_DEF_H */

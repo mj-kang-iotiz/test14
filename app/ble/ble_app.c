@@ -32,8 +32,7 @@ static void ble_evt_handler(ble_t *ble, const ble_event_t *event);
  * 앱 시작/종료 API
  *===========================================================================*/
 
-void ble_app_start(void)
-{
+void ble_app_start(void) {
     const board_config_t *config = board_get_config();
 
     LOG_INFO("BLE 앱 시작 - 보드: %d", config->board);
@@ -72,8 +71,7 @@ void ble_app_start(void)
     LOG_INFO("BLE 앱 시작 완료");
 }
 
-void ble_app_stop(void)
-{
+void ble_app_stop(void) {
     if (!ble_instance.enabled) {
         return;
     }
@@ -95,16 +93,14 @@ void ble_app_stop(void)
  * BLE 핸들/인스턴스 API
  *===========================================================================*/
 
-ble_t *ble_app_get_handle(void)
-{
+ble_t *ble_app_get_handle(void) {
     if (!ble_instance.enabled) {
         return NULL;
     }
     return &ble_instance.ble;
 }
 
-ble_instance_t *ble_app_get_instance(void)
-{
+ble_instance_t *ble_app_get_instance(void) {
     return &ble_instance;
 }
 
@@ -112,8 +108,7 @@ ble_instance_t *ble_app_get_instance(void)
  * 데이터 송수신 API
  *===========================================================================*/
 
-bool ble_app_send(const char *data, size_t len)
-{
+bool ble_app_send(const char *data, size_t len) {
     if (!ble_instance.enabled) {
         LOG_ERR("BLE not enabled");
         return false;
@@ -126,8 +121,7 @@ bool ble_app_send(const char *data, size_t len)
  * AT 명령어 API (동기)
  *===========================================================================*/
 
-bool ble_app_set_device_name(const char *name, uint32_t timeout_ms)
-{
+bool ble_app_set_device_name(const char *name, uint32_t timeout_ms) {
     if (!ble_instance.enabled || !name) {
         return false;
     }
@@ -135,8 +129,7 @@ bool ble_app_set_device_name(const char *name, uint32_t timeout_ms)
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "AT+MANUF=%s\r", name);
 
-    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble, cmd,
-                                                   NULL, 0, timeout_ms);
+    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble, cmd, NULL, 0, timeout_ms);
 
     if (status == BLE_AT_STATUS_COMPLETED) {
         LOG_INFO("디바이스 이름 설정 완료: %s", name);
@@ -147,17 +140,14 @@ bool ble_app_set_device_name(const char *name, uint32_t timeout_ms)
     return false;
 }
 
-bool ble_app_get_device_name(char *name_buf, size_t buf_size, uint32_t timeout_ms)
-{
+bool ble_app_get_device_name(char *name_buf, size_t buf_size, uint32_t timeout_ms) {
     if (!ble_instance.enabled || !name_buf || buf_size == 0) {
         return false;
     }
 
     char response[BLE_AT_RESPONSE_MAX];
-    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble,
-                                                   "AT+MANUF?\r",
-                                                   response, sizeof(response),
-                                                   timeout_ms);
+    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble, "AT+MANUF?\r", response,
+                                                  sizeof(response), timeout_ms);
 
     if (status == BLE_AT_STATUS_COMPLETED) {
         /* 응답에서 이름 추출: +MANUF:NAME 또는 NAME */
@@ -165,7 +155,8 @@ bool ble_app_get_device_name(char *name_buf, size_t buf_size, uint32_t timeout_m
         if (param) {
             strncpy(name_buf, param, buf_size - 1);
             name_buf[buf_size - 1] = '\0';
-        } else {
+        }
+        else {
             strncpy(name_buf, response, buf_size - 1);
             name_buf[buf_size - 1] = '\0';
         }
@@ -175,8 +166,7 @@ bool ble_app_get_device_name(char *name_buf, size_t buf_size, uint32_t timeout_m
     return false;
 }
 
-bool ble_app_set_uart_baudrate(uint32_t baudrate, uint32_t timeout_ms)
-{
+bool ble_app_set_uart_baudrate(uint32_t baudrate, uint32_t timeout_ms) {
     if (!ble_instance.enabled) {
         return false;
     }
@@ -184,8 +174,7 @@ bool ble_app_set_uart_baudrate(uint32_t baudrate, uint32_t timeout_ms)
     char cmd[64];
     snprintf(cmd, sizeof(cmd), "AT+UART=%lu\r", baudrate);
 
-    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble, cmd,
-                                                   NULL, 0, timeout_ms);
+    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble, cmd, NULL, 0, timeout_ms);
 
     if (status == BLE_AT_STATUS_COMPLETED) {
         LOG_INFO("UART 속도 설정 완료: %lu", baudrate);
@@ -196,15 +185,13 @@ bool ble_app_set_uart_baudrate(uint32_t baudrate, uint32_t timeout_ms)
     return false;
 }
 
-bool ble_app_start_advertising(uint32_t timeout_ms)
-{
+bool ble_app_start_advertising(uint32_t timeout_ms) {
     if (!ble_instance.enabled) {
         return false;
     }
 
-    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble,
-                                                   "AT+ADVON\r",
-                                                   NULL, 0, timeout_ms);
+    ble_at_status_t status =
+        ble_send_at_cmd_sync(&ble_instance.ble, "AT+ADVON\r", NULL, 0, timeout_ms);
 
     if (status == BLE_AT_STATUS_COMPLETED) {
         LOG_INFO("Advertising 시작 완료");
@@ -215,15 +202,13 @@ bool ble_app_start_advertising(uint32_t timeout_ms)
     return false;
 }
 
-bool ble_app_disconnect(uint32_t timeout_ms)
-{
+bool ble_app_disconnect(uint32_t timeout_ms) {
     if (!ble_instance.enabled) {
         return false;
     }
 
-    ble_at_status_t status = ble_send_at_cmd_sync(&ble_instance.ble,
-                                                   "AT+DISCONNECT\r",
-                                                   NULL, 0, timeout_ms);
+    ble_at_status_t status =
+        ble_send_at_cmd_sync(&ble_instance.ble, "AT+DISCONNECT\r", NULL, 0, timeout_ms);
 
     if (status == BLE_AT_STATUS_COMPLETED) {
         LOG_INFO("연결 해제 완료");
@@ -238,16 +223,14 @@ bool ble_app_disconnect(uint32_t timeout_ms)
  * 상태 조회 API
  *===========================================================================*/
 
-ble_conn_state_t ble_app_get_conn_state(void)
-{
+ble_conn_state_t ble_app_get_conn_state(void) {
     if (!ble_instance.enabled) {
         return BLE_CONN_DISCONNECTED;
     }
     return ble_get_conn_state(&ble_instance.ble);
 }
 
-void ble_app_set_conn_state(ble_conn_state_t state)
-{
+void ble_app_set_conn_state(ble_conn_state_t state) {
     if (!ble_instance.enabled) {
         return;
     }
@@ -256,13 +239,13 @@ void ble_app_set_conn_state(ble_conn_state_t state)
 
     if (state == BLE_CONN_CONNECTED) {
         LOG_INFO("BLE Connected");
-    } else {
+    }
+    else {
         LOG_INFO("BLE Disconnected");
     }
 }
 
-ble_mode_t ble_app_get_mode(void)
-{
+ble_mode_t ble_app_get_mode(void) {
     if (!ble_instance.enabled) {
         return BLE_MODE_BYPASS;
     }
@@ -278,44 +261,43 @@ ble_mode_t ble_app_get_mode(void)
  *
  * lib/ble에서 파싱된 이벤트 처리
  */
-static void ble_evt_handler(ble_t *ble, const ble_event_t *event)
-{
+static void ble_evt_handler(ble_t *ble, const ble_event_t *event) {
     if (!ble || !event) {
         return;
     }
 
     switch (event->type) {
-        case BLE_EVENT_AT_OK:
-            LOG_DEBUG("AT OK: %s", event->data.at_response.response);
-            break;
+    case BLE_EVENT_AT_OK:
+        LOG_DEBUG("AT OK: %s", event->data.at_response.response);
+        break;
 
-        case BLE_EVENT_AT_ERROR:
-            LOG_WARN("AT ERROR: %s", event->data.at_response.response);
-            break;
+    case BLE_EVENT_AT_ERROR:
+        LOG_WARN("AT ERROR: %s", event->data.at_response.response);
+        break;
 
-        case BLE_EVENT_AT_READY:
-            LOG_INFO("BLE 모듈 준비 완료");
-            break;
+    case BLE_EVENT_AT_READY:
+        LOG_INFO("BLE 모듈 준비 완료");
+        break;
 
-        case BLE_EVENT_CONNECTED:
-            LOG_INFO("BLE 연결됨 (이벤트)");
-            break;
+    case BLE_EVENT_CONNECTED:
+        LOG_INFO("BLE 연결됨 (이벤트)");
+        break;
 
-        case BLE_EVENT_DISCONNECTED:
-            LOG_INFO("BLE 연결 해제됨 (이벤트)");
-            break;
+    case BLE_EVENT_DISCONNECTED:
+        LOG_INFO("BLE 연결 해제됨 (이벤트)");
+        break;
 
-        case BLE_EVENT_ADVERTISING:
-            LOG_DEBUG("BLE Advertising 시작됨");
-            break;
+    case BLE_EVENT_ADVERTISING:
+        LOG_DEBUG("BLE Advertising 시작됨");
+        break;
 
-        case BLE_EVENT_APP_CMD:
-            /* 앱 명령어 처리 (ble_cmd.c) */
-            LOG_INFO("앱 명령어 수신: %s", event->data.app_cmd.cmd);
-            ble_app_cmd_handler(&ble_instance, event->data.app_cmd.cmd);
-            break;
+    case BLE_EVENT_APP_CMD:
+        /* 앱 명령어 처리 (ble_cmd.c) */
+        LOG_INFO("앱 명령어 수신: %s", event->data.app_cmd.cmd);
+        ble_app_cmd_handler(&ble_instance, event->data.app_cmd.cmd);
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }

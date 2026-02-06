@@ -11,8 +11,8 @@
 #include "parser.h"
 #include <string.h>
 
-void setUp(void) { }
-void tearDown(void) { }
+void setUp(void) {}
+void tearDown(void) {}
 
 /*===========================================================================
  * parse_int32
@@ -61,7 +61,7 @@ void test_parse_uint32_basic(void) {
 }
 
 void test_parse_uint32_large(void) {
-    const char *p = "4294967295";   /* UINT32_MAX */
+    const char *p = "4294967295"; /* UINT32_MAX */
     uint32_t val = parse_uint32(&p);
     TEST_ASSERT_EQUAL_UINT32(4294967295U, val);
 }

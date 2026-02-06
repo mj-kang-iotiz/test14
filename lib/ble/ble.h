@@ -38,12 +38,12 @@ typedef void (*ble_evt_handler_t)(ble_t *ble, const ble_event_t *event);
  * AT 명령 응답 컨텍스트 (동기 명령용)
  *===========================================================================*/
 typedef struct {
-    char expected[32];              /**< 기대 응답 (+OK 등) */
+    char expected[32];                  /**< 기대 응답 (+OK 등) */
     char response[BLE_AT_RESPONSE_MAX]; /**< 실제 응답 버퍼 */
-    size_t response_len;            /**< 응답 길이 */
-    SemaphoreHandle_t sem;          /**< 응답 대기 세마포어 */
-    ble_at_status_t status;         /**< 명령 상태 */
-    bool active;                    /**< 요청 활성 상태 */
+    size_t response_len;                /**< 응답 길이 */
+    SemaphoreHandle_t sem;              /**< 응답 대기 세마포어 */
+    ble_at_status_t status;             /**< 명령 상태 */
+    bool active;                        /**< 요청 활성 상태 */
 } ble_at_request_t;
 
 /*===========================================================================
@@ -51,33 +51,33 @@ typedef struct {
  *===========================================================================*/
 struct ble_s {
     /*--- HAL ---*/
-    const ble_hal_ops_t *ops;       /**< HAL 연산 함수 포인터 */
+    const ble_hal_ops_t *ops; /**< HAL 연산 함수 포인터 */
 
     /*--- RX 버퍼 (GPS처럼 링버퍼 사용) ---*/
-    ringbuffer_t rx_buf;            /**< RX 링버퍼 */
+    ringbuffer_t rx_buf;              /**< RX 링버퍼 */
     char rx_buf_mem[BLE_RX_BUF_SIZE]; /**< RX 버퍼 메모리 */
 
     /*--- 파서 ---*/
-    ble_parser_ctx_t parser_ctx;    /**< 파서 컨텍스트 */
+    ble_parser_ctx_t parser_ctx;        /**< 파서 컨텍스트 */
     char line_buf[BLE_PARSER_BUF_SIZE]; /**< 파싱된 라인 저장 */
 
     /*--- 상태 ---*/
-    ble_mode_t mode;                /**< 현재 모드 (AT/Bypass) */
-    ble_conn_state_t conn_state;    /**< 연결 상태 */
-    bool ready;                     /**< 모듈 준비 완료 */
+    ble_mode_t mode;             /**< 현재 모드 (AT/Bypass) */
+    ble_conn_state_t conn_state; /**< 연결 상태 */
+    bool ready;                  /**< 모듈 준비 완료 */
 
     /*--- AT 명령 동기화 ---*/
-    ble_at_request_t at_request;    /**< 동기 AT 명령 요청 */
-    SemaphoreHandle_t mutex;        /**< 송신 보호 뮤텍스 */
+    ble_at_request_t at_request; /**< 동기 AT 명령 요청 */
+    SemaphoreHandle_t mutex;     /**< 송신 보호 뮤텍스 */
 
     /*--- 이벤트 핸들러 ---*/
-    ble_evt_handler_t handler;      /**< 이벤트 콜백 */
-    void *user_data;                /**< 사용자 데이터 */
+    ble_evt_handler_t handler; /**< 이벤트 콜백 */
+    void *user_data;           /**< 사용자 데이터 */
 
     /*--- RX 태스크 (lib에서 관리) ---*/
-    QueueHandle_t rx_queue;         /**< RX 신호 큐 */
-    TaskHandle_t rx_task;           /**< RX 태스크 핸들 */
-    volatile bool running;          /**< 태스크 실행 상태 */
+    QueueHandle_t rx_queue; /**< RX 신호 큐 */
+    TaskHandle_t rx_task;   /**< RX 태스크 핸들 */
+    volatile bool running;  /**< 태스크 실행 상태 */
 };
 
 /*===========================================================================
@@ -179,9 +179,8 @@ bool ble_enter_bypass_mode(ble_t *ble);
  * @param timeout_ms 타임아웃 (ms)
  * @return AT 명령 상태
  */
-ble_at_status_t ble_send_at_cmd_sync(ble_t *ble, const char *cmd,
-                                      char *response, size_t response_size,
-                                      uint32_t timeout_ms);
+ble_at_status_t ble_send_at_cmd_sync(ble_t *ble, const char *cmd, char *response,
+                                     size_t response_size, uint32_t timeout_ms);
 
 /*===========================================================================
  * 상태 조회 API

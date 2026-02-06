@@ -2,13 +2,14 @@
 #include "cmsis_compiler.h"
 #include <stdio.h>
 
-void dev_assert_failed(const char *file, int line, const char *expr, const char *msg)
-{
+void dev_assert_failed(const char *file, int line, const char *expr, const char *msg) {
     __disable_irq();
 
     printf("\r\n[ASSERT] %s:%d\r\n", file, line);
-    if (expr) printf("  expr: %s\r\n", expr);
-    if (msg)  printf("  msg:  %s\r\n", msg);
+    if (expr)
+        printf("  expr: %s\r\n", expr);
+    if (msg)
+        printf("  msg:  %s\r\n", msg);
 
     while (1) {
         __NOP();

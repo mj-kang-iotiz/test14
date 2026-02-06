@@ -67,14 +67,8 @@ bool gps_init(gps_t *gps) {
     }
 
     /* RX 태스크 생성 */
-    BaseType_t ret = xTaskCreate(
-        gps_process_task,
-        "gps_pkt",
-        1024,
-        (void*)gps,
-        tskIDLE_PRIORITY + 1,
-        &gps->pkt_task
-    );
+    BaseType_t ret = xTaskCreate(gps_process_task, "gps_pkt", 1024, (void *)gps,
+                                 tskIDLE_PRIORITY + 1, &gps->pkt_task);
 
     if (ret != pdPASS) {
         LOG_ERR("Failed to create gps_process_task");
@@ -171,7 +165,7 @@ void gps_stop(gps_t *gps) {
 
     /* 큐에 더미 데이터를 보내 portMAX_DELAY 대기를 깨움 */
     if (gps->pkt_queue) {
-        uint8_t dummy = 0xFF;  /* 종료 신호 */
+        uint8_t dummy = 0xFF; /* 종료 신호 */
         xQueueSend(gps->pkt_queue, &dummy, 0);
     }
 

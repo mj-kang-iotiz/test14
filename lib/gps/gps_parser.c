@@ -39,9 +39,12 @@ bool ringbuffer_find_char(ringbuffer_t *rb, char ch, size_t max_search, size_t *
 }
 
 uint8_t hex_char_to_num(char ch) {
-    if (ch >= '0' && ch <= '9') return ch - '0';
-    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
-    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    if (ch >= 'A' && ch <= 'F')
+        return ch - 'A' + 10;
+    if (ch >= 'a' && ch <= 'f')
+        return ch - 'a' + 10;
     return 0;
 }
 
@@ -54,7 +57,8 @@ uint8_t hex_to_byte(const char *hex) {
  *===========================================================================*/
 
 void gps_parser_init(gps_t *gps) {
-    if (!gps) return;
+    if (!gps)
+        return;
 
     memset(&gps->parser_ctx, 0, sizeof(gps_parser_ctx_t));
     LOG_INFO("GPS parser initialized");
@@ -65,7 +69,8 @@ void gps_parser_init(gps_t *gps) {
  *===========================================================================*/
 
 parse_result_t gps_parser_process(gps_t *gps) {
-    if (!gps) return PARSE_INVALID;
+    if (!gps)
+        return PARSE_INVALID;
 
     ringbuffer_t *rb = &gps->rx_buf;
     parse_result_t result = PARSE_NEED_MORE;
@@ -96,26 +101,26 @@ parse_result_t gps_parser_process(gps_t *gps) {
 
         /* 결과 처리 */
         switch (result) {
-            case PARSE_OK:
-                /* 파싱 성공, advance는 각 파서에서 완료 */
-                gps->parser_ctx.stats.rx_packets++;
-                continue;  /* 다음 패킷 처리 */
+        case PARSE_OK:
+            /* 파싱 성공, advance는 각 파서에서 완료 */
+            gps->parser_ctx.stats.rx_packets++;
+            continue; /* 다음 패킷 처리 */
 
-            case PARSE_NEED_MORE:
-                /* 데이터 부족, 루프 탈출 */
-                return result;
+        case PARSE_NEED_MORE:
+            /* 데이터 부족, 루프 탈출 */
+            return result;
 
-            case PARSE_INVALID:
-                /* CRC 오류 등, 1바이트 skip 후 재시도 */
-                gps->parser_ctx.stats.invalid_packets++;
-                ringbuffer_advance(rb, 1);
-                continue;
+        case PARSE_INVALID:
+            /* CRC 오류 등, 1바이트 skip 후 재시도 */
+            gps->parser_ctx.stats.invalid_packets++;
+            ringbuffer_advance(rb, 1);
+            continue;
 
-            case PARSE_NOT_MINE:
-                /* 모든 파서가 거부, 알 수 없는 바이트 skip */
-                gps->parser_ctx.stats.unknown_packets++;
-                ringbuffer_advance(rb, 1);
-                continue;
+        case PARSE_NOT_MINE:
+            /* 모든 파서가 거부, 알 수 없는 바이트 skip */
+            gps->parser_ctx.stats.unknown_packets++;
+            ringbuffer_advance(rb, 1);
+            continue;
         }
     }
 
@@ -126,12 +131,14 @@ parse_result_t gps_parser_process(gps_t *gps) {
  * 파서 통계 API
  *===========================================================================*/
 
-const gps_parser_stats_t* gps_parser_get_stats(gps_t *gps) {
-    if (!gps) return NULL;
+const gps_parser_stats_t *gps_parser_get_stats(gps_t *gps) {
+    if (!gps)
+        return NULL;
     return &gps->parser_ctx.stats;
 }
 
 void gps_parser_reset_stats(gps_t *gps) {
-    if (!gps) return;
+    if (!gps)
+        return;
     memset(&gps->parser_ctx.stats, 0, sizeof(gps_parser_stats_t));
 }

@@ -15,27 +15,27 @@ static ble_parse_result_t ble_parser_classify_line(const char *line);
  * API 구현
  *===========================================================================*/
 
-void ble_parser_init(ble_parser_ctx_t *ctx)
-{
-    if (!ctx) return;
+void ble_parser_init(ble_parser_ctx_t *ctx) {
+    if (!ctx)
+        return;
 
     ctx->state = BLE_PARSE_STATE_IDLE;
     ctx->pos = 0;
     ctx->buf[0] = '\0';
 }
 
-void ble_parser_reset(ble_parser_ctx_t *ctx)
-{
-    if (!ctx) return;
+void ble_parser_reset(ble_parser_ctx_t *ctx) {
+    if (!ctx)
+        return;
 
     ctx->state = BLE_PARSE_STATE_IDLE;
     ctx->pos = 0;
     ctx->buf[0] = '\0';
 }
 
-ble_parse_result_t ble_parser_process_byte(ble_parser_ctx_t *ctx, uint8_t byte)
-{
-    if (!ctx) return BLE_PARSE_RESULT_NONE;
+ble_parse_result_t ble_parser_process_byte(ble_parser_ctx_t *ctx, uint8_t byte) {
+    if (!ctx)
+        return BLE_PARSE_RESULT_NONE;
 
     /* CR/LF 처리 - 라인 종료 */
     if (byte == '\r' || byte == '\n') {
@@ -66,9 +66,11 @@ ble_parse_result_t ble_parser_process_byte(ble_parser_ctx_t *ctx, uint8_t byte)
     if (ctx->state == BLE_PARSE_STATE_IDLE) {
         if (byte == '+') {
             ctx->state = BLE_PARSE_STATE_AT_RESP;
-        } else if (byte == 'A') {
+        }
+        else if (byte == 'A') {
             ctx->state = BLE_PARSE_STATE_AT_CMD;
-        } else {
+        }
+        else {
             ctx->state = BLE_PARSE_STATE_APP_CMD;
         }
     }
@@ -89,10 +91,10 @@ ble_parse_result_t ble_parser_process_byte(ble_parser_ctx_t *ctx, uint8_t byte)
 }
 
 size_t ble_parser_process(ble_parser_ctx_t *ctx, const uint8_t *data, size_t len,
-                          ble_parse_result_t *result)
-{
+                          ble_parse_result_t *result) {
     if (!ctx || !data || len == 0) {
-        if (result) *result = BLE_PARSE_RESULT_NONE;
+        if (result)
+            *result = BLE_PARSE_RESULT_NONE;
         return 0;
     }
 
@@ -103,24 +105,26 @@ size_t ble_parser_process(ble_parser_ctx_t *ctx, const uint8_t *data, size_t len
         processed++;
 
         if (r != BLE_PARSE_RESULT_NONE) {
-            if (result) *result = r;
+            if (result)
+                *result = r;
             return processed;
         }
     }
 
-    if (result) *result = BLE_PARSE_RESULT_NONE;
+    if (result)
+        *result = BLE_PARSE_RESULT_NONE;
     return processed;
 }
 
-const char *ble_parser_get_line(const ble_parser_ctx_t *ctx)
-{
-    if (!ctx) return "";
+const char *ble_parser_get_line(const ble_parser_ctx_t *ctx) {
+    if (!ctx)
+        return "";
     return ctx->buf;
 }
 
-const char *ble_parser_get_at_param(const char *line)
-{
-    if (!line) return NULL;
+const char *ble_parser_get_at_param(const char *line) {
+    if (!line)
+        return NULL;
 
     /* ':' 또는 '=' 찾기 */
     const char *sep = strchr(line, ':');
@@ -142,8 +146,7 @@ const char *ble_parser_get_at_param(const char *line)
 /**
  * @brief 파싱된 라인을 분류
  */
-static ble_parse_result_t ble_parser_classify_line(const char *line)
-{
+static ble_parse_result_t ble_parser_classify_line(const char *line) {
     if (!line || line[0] == '\0') {
         return BLE_PARSE_RESULT_NONE;
     }
