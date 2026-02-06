@@ -1,3 +1,7 @@
+---
+type: refactor
+modules: [gps]
+---
 # GGA Raw 패킷 전달 구조 리팩토링
 
 ## 요약

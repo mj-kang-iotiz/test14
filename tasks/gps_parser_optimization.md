@@ -1,3 +1,7 @@
+---
+type: optimization
+modules: [gps]
+---
 # GPS 파서 성능 최적화
 
 ## 요약
