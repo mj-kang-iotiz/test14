@@ -1361,7 +1361,7 @@ void lora_app_start(void)
   /* Base 모드일 때만 RTCM 이벤트 구독 (큐 기반) */
   if (config->lora_mode == LORA_MODE_BASE)
   {
-    event_bus_subscribe_with_queue(EVENT_RTCM_FOR_LORA, instance.event_queue);
+    event_bus_subscribe(EVENT_RTCM_FOR_LORA, instance.event_queue);
     LOG_INFO("RTCM 이벤트 구독 완료 (큐 기반)");
   }
 
@@ -1377,7 +1377,7 @@ void lora_app_stop(void)
   /* 이벤트 구독 해제 */
   if (config->lora_mode == LORA_MODE_BASE)
   {
-    event_bus_unsubscribe_queue(EVENT_RTCM_FOR_LORA, instance.event_queue);
+    event_bus_unsubscribe(EVENT_RTCM_FOR_LORA, instance.event_queue);
   }
 
   /* 인스턴스 정리 */

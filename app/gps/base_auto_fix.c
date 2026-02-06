@@ -41,13 +41,14 @@ static TimerHandle_t status_timer = NULL;
 
 /* 워커 태스크 및 이벤트 큐 */
 static TaskHandle_t worker_task = NULL;
-static QueueHandle_t event_queue = NULL;
-static volatile bool worker_running = false;  /* 태스크 종료 플래그 */
+static QueueHandle_t internal_event_queue = NULL;  /* 내부 이벤트 (타이머 등) */
+static QueueHandle_t bus_event_queue = NULL;       /* 이벤트 버스 이벤트 */
+static volatile bool worker_running = false;       /* 태스크 종료 플래그 */
 
 typedef enum {
   BASE_AUTO_FIX_EVENT_AVERAGING_COMPLETE,
   BASE_AUTO_FIX_EVENT_SHUTDOWN           /* 종료 이벤트 */
-} base_auto_fix_event_t;
+} base_auto_fix_internal_event_t;
 
 // 좌표 샘플 버퍼
 static coord_sample_t samples[MAX_SAMPLES];
@@ -64,10 +65,10 @@ static void shutdown_ntrip_and_lte(void);
 static void base_auto_fix_worker_task(void *pvParameter);
 static void status_timer_callback(TimerHandle_t xTimer);
 
-// 이벤트 핸들러 선언
-static void on_gps_fix_changed(const event_t *event, void *user_data);
-static void on_gps_gga_update(const event_t *event, void *user_data);
-static void on_ntrip_connected(const event_t *event, void *user_data);
+// 이벤트 처리 함수 선언 (워커 태스크 내부에서 호출)
+static void handle_gps_fix_changed(const event_t *event);
+static void handle_gps_gga_update(const event_t *event);
+static void handle_ntrip_connected(const event_t *event);
 
 /**
 
@@ -110,11 +111,22 @@ bool base_auto_fix_init(uint8_t id) {
 
   xTimerStart(status_timer, 0);
 
-  // 이벤트 큐 생성
-  if (event_queue == NULL) {
-    event_queue = xQueueCreate(5, sizeof(base_auto_fix_event_t));
-    if (event_queue == NULL) {
-      LOG_ERR("이벤트 큐 생성 실패");
+  // 내부 이벤트 큐 생성
+  if (internal_event_queue == NULL) {
+    internal_event_queue = xQueueCreate(5, sizeof(base_auto_fix_internal_event_t));
+    if (internal_event_queue == NULL) {
+      LOG_ERR("내부 이벤트 큐 생성 실패");
+      return false;
+    }
+  }
+
+  // 이벤트 버스용 큐 생성
+  if (bus_event_queue == NULL) {
+    bus_event_queue = xQueueCreate(8, sizeof(event_t));
+    if (bus_event_queue == NULL) {
+      LOG_ERR("버스 이벤트 큐 생성 실패");
+      vQueueDelete(internal_event_queue);
+      internal_event_queue = NULL;
       return false;
     }
   }
@@ -129,16 +141,18 @@ bool base_auto_fix_init(uint8_t id) {
                                   &worker_task);
     if (ret != pdPASS) {
       LOG_ERR("워커 태스크 생성 실패");
-      vQueueDelete(event_queue);
-      event_queue = NULL;
+      vQueueDelete(internal_event_queue);
+      vQueueDelete(bus_event_queue);
+      internal_event_queue = NULL;
+      bus_event_queue = NULL;
       return false;
     }
   }
 
-  // 이벤트 버스 구독
-  event_bus_subscribe(EVENT_GPS_FIX_CHANGED, on_gps_fix_changed, NULL);
-  event_bus_subscribe(EVENT_GPS_GGA_UPDATE, on_gps_gga_update, NULL);
-  event_bus_subscribe(EVENT_NTRIP_CONNECTED, on_ntrip_connected, NULL);
+  // 이벤트 버스 구독 (큐 방식)
+  event_bus_subscribe(EVENT_GPS_FIX_CHANGED, bus_event_queue);
+  event_bus_subscribe(EVENT_GPS_GGA_UPDATE, bus_event_queue);
+  event_bus_subscribe(EVENT_NTRIP_CONNECTED, bus_event_queue);
 
   LOG_INFO("Base Auto-Fix 모듈 초기화 완료");
 
@@ -179,8 +193,11 @@ void base_auto_fix_stop(void) {
   }
 
   // 이벤트 큐 클리어
-  if (event_queue != NULL) {
-    xQueueReset(event_queue);
+  if (internal_event_queue != NULL) {
+    xQueueReset(internal_event_queue);
+  }
+  if (bus_event_queue != NULL) {
+    xQueueReset(bus_event_queue);
   }
 
   state = BASE_AUTO_FIX_DISABLED;
@@ -208,11 +225,9 @@ base_auto_fix_state_t base_auto_fix_get_state(void) {
 
 
 /**
- * @brief GPS Fix 상태 변화 이벤트 핸들러
+ * @brief GPS Fix 상태 변화 이벤트 처리
  */
-static void on_gps_fix_changed(const event_t *event, void *user_data) {
-  (void)user_data;
-
+static void handle_gps_fix_changed(const event_t *event) {
   if (state == BASE_AUTO_FIX_DISABLED || state == BASE_AUTO_FIX_COMPLETED) {
     return;
   }
@@ -239,11 +254,9 @@ static void on_gps_fix_changed(const event_t *event, void *user_data) {
 
 
 /**
- * @brief GGA 데이터 업데이트 이벤트 핸들러
+ * @brief GGA 데이터 업데이트 이벤트 처리
  */
-static void on_gps_gga_update(const event_t *event, void *user_data) {
-  (void)user_data;
-
+static void handle_gps_gga_update(const event_t *event) {
   if (state != BASE_AUTO_FIX_AVERAGING) {
     return;
   }
@@ -262,11 +275,9 @@ static void on_gps_gga_update(const event_t *event, void *user_data) {
 
 
 /**
- * @brief NTRIP 연결 상태 업데이트 이벤트 핸들러
+ * @brief NTRIP 연결 상태 업데이트 이벤트 처리
  */
-static void on_ntrip_connected(const event_t *event, void *user_data) {
-  (void)user_data;
-
+static void handle_ntrip_connected(const event_t *event) {
   bool connected = event->data.ntrip.connected;
 
   if (state == BASE_AUTO_FIX_NTRIP_WAIT && connected) {
@@ -319,13 +330,12 @@ bool base_auto_fix_get_average_coord(coord_average_t *result) {
  */
 
 static void averaging_timer_callback(TimerHandle_t xTimer) {
-
   LOG_INFO("평균 계산 타이머 만료 (샘플 수: %lu)", sample_count);
 
   // 워커 태스크에 이벤트 전송
-  base_auto_fix_event_t event = BASE_AUTO_FIX_EVENT_AVERAGING_COMPLETE;
+  base_auto_fix_internal_event_t event = BASE_AUTO_FIX_EVENT_AVERAGING_COMPLETE;
 
-  if (xQueueSend(event_queue, &event, 0) != pdTRUE) {
+  if (xQueueSend(internal_event_queue, &event, 0) != pdTRUE) {
     LOG_ERR("워커 태스크에 이벤트 전송 실패");
     state = BASE_AUTO_FIX_FAILED;
   }
@@ -608,27 +618,29 @@ static void shutdown_ntrip_and_lte(void) {
 /**
  * @brief Base Auto-Fix 워커 태스크 (블로킹 작업 처리)
  *
- * 타이머 콜백에서 블로킹 작업을 직접 수행하지 않고,
- * 이 워커 태스크가 큐를 통해 이벤트를 받아서 처리합니다.
+ * 두 개의 큐를 모니터링합니다:
+ * - internal_event_queue: 타이머 콜백 등 내부 이벤트
+ * - bus_event_queue: 이벤트 버스에서 오는 GPS/NTRIP 이벤트
  */
 static void base_auto_fix_worker_task(void *pvParameter) {
-  base_auto_fix_event_t event;
+  base_auto_fix_internal_event_t internal_event;
+  event_t bus_event;
 
   LOG_INFO("Base Auto-Fix 워커 태스크 시작");
   worker_running = true;
 
   while (worker_running) {
-    /* 큐에서 이벤트 대기 (타임아웃으로 종료 플래그 체크) */
-    if (xQueueReceive(event_queue, &event, pdMS_TO_TICKS(100)) == pdTRUE) {
+    /* 내부 이벤트 체크 (non-blocking) */
+    if (xQueueReceive(internal_event_queue, &internal_event, 0) == pdTRUE) {
 
       /* 종료 이벤트 */
-      if (event == BASE_AUTO_FIX_EVENT_SHUTDOWN) {
+      if (internal_event == BASE_AUTO_FIX_EVENT_SHUTDOWN) {
         LOG_INFO("워커 태스크 종료 이벤트 수신");
         break;
       }
 
       /* 평균 계산 완료 이벤트 */
-      if (event == BASE_AUTO_FIX_EVENT_AVERAGING_COMPLETE) {
+      if (internal_event == BASE_AUTO_FIX_EVENT_AVERAGING_COMPLETE) {
         LOG_INFO("평균 계산 완료 이벤트 수신");
 
         /* 샘플 수 확인 */
@@ -671,6 +683,26 @@ static void base_auto_fix_worker_task(void *pvParameter) {
         LOG_INFO("Base Auto-Fix 완료!");
       }
     }
+
+    /* 이벤트 버스 이벤트 체크 (non-blocking) */
+    if (xQueueReceive(bus_event_queue, &bus_event, 0) == pdTRUE) {
+      switch (bus_event.type) {
+        case EVENT_GPS_FIX_CHANGED:
+          handle_gps_fix_changed(&bus_event);
+          break;
+        case EVENT_GPS_GGA_UPDATE:
+          handle_gps_gga_update(&bus_event);
+          break;
+        case EVENT_NTRIP_CONNECTED:
+          handle_ntrip_connected(&bus_event);
+          break;
+        default:
+          break;
+      }
+    }
+
+    /* CPU 점유율 완화 */
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 
   worker_running = false;
@@ -686,17 +718,17 @@ void base_auto_fix_deinit(void) {
   LOG_INFO("Base Auto-Fix 모듈 해제 시작");
 
   /* 1. 이벤트 구독 해제 */
-  event_bus_unsubscribe(EVENT_GPS_FIX_CHANGED, on_gps_fix_changed);
-  event_bus_unsubscribe(EVENT_GPS_GGA_UPDATE, on_gps_gga_update);
-  event_bus_unsubscribe(EVENT_NTRIP_CONNECTED, on_ntrip_connected);
+  event_bus_unsubscribe(EVENT_GPS_FIX_CHANGED, bus_event_queue);
+  event_bus_unsubscribe(EVENT_GPS_GGA_UPDATE, bus_event_queue);
+  event_bus_unsubscribe(EVENT_NTRIP_CONNECTED, bus_event_queue);
 
   /* 2. 동작 중지 */
   base_auto_fix_stop();
 
   /* 3. 워커 태스크 종료 */
   if (worker_task != NULL && worker_running) {
-    base_auto_fix_event_t event = BASE_AUTO_FIX_EVENT_SHUTDOWN;
-    xQueueSend(event_queue, &event, pdMS_TO_TICKS(100));
+    base_auto_fix_internal_event_t event = BASE_AUTO_FIX_EVENT_SHUTDOWN;
+    xQueueSend(internal_event_queue, &event, pdMS_TO_TICKS(100));
 
     /* 태스크 종료 대기 (최대 500ms) */
     uint32_t wait_count = 0;
@@ -725,9 +757,14 @@ void base_auto_fix_deinit(void) {
   }
 
   /* 5. 이벤트 큐 삭제 */
-  if (event_queue != NULL) {
-    vQueueDelete(event_queue);
-    event_queue = NULL;
+  if (internal_event_queue != NULL) {
+    vQueueDelete(internal_event_queue);
+    internal_event_queue = NULL;
+  }
+
+  if (bus_event_queue != NULL) {
+    vQueueDelete(bus_event_queue);
+    bus_event_queue = NULL;
   }
 
   /* 6. 상태 초기화 */
