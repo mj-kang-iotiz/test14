@@ -1,0 +1,11 @@
+// cppcheck suppression list for GUGU MACHINE GUIDANCE V2
+// See: https://cppcheck.sourceforge.io/manual.html#suppressions
+
+// System headers not available on CI host
+missingIncludeSystem
+
+// HAL callbacks and ISR handlers appear unused in static analysis
+unusedFunction
+
+// Avoid errors from suppressions that don't match
+unmatchedSuppression
