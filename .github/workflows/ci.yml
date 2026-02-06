@@ -75,10 +75,12 @@ jobs:
             -I lib/log \
             -I config \
             -I Core/Inc \
+            -I test/mock \
             -D USE_HAL_DRIVER \
             -D STM32H562xx \
             --output-file=cppcheck-report.txt \
-            lib/ app/
+            -i test/unity \
+            Core/Src/ Core/Inc/ lib/ app/ config/ test/
 
       - name: Show results
         if: always()
@@ -112,9 +114,10 @@ jobs:
 
       - name: Check formatting
         run: |
-          # Find all project C/H files (exclude vendor code)
-          FILES=$(find lib/ app/ config/ Core/Src/ Core/Inc/ \
-            -name '*.c' -o -name '*.h' \
+          # Find all project C/H files (exclude vendor & Unity)
+          FILES=$(find Core/Src/ Core/Inc/ lib/ app/ config/ test/ \
+            -path 'test/unity' -prune -o \
+            \( -name '*.c' -o -name '*.h' \) -print \
             2>/dev/null | sort)
 
           if [ -z "$FILES" ]; then
@@ -165,10 +168,10 @@ jobs:
 
       - name: Run clang-tidy
         run: |
-          # Source files from lib/ that are built by the test cmake
-          SOURCE_FILES=$(find lib/ \
-            -name '*.c' \
-            ! -path '*/test/*' \
+          # Source files compiled by test cmake (lib/ + test/ excluding unity)
+          SOURCE_FILES=$(find lib/ test/ \
+            -path 'test/unity' -prune -o \
+            -name '*.c' -print \
             2>/dev/null | sort)
 
           if [ -z "$SOURCE_FILES" ]; then
