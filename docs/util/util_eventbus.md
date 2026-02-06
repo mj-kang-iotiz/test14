@@ -1,23 +1,49 @@
 # Event Bus
- 
-## 설계 의도
-- 비동기 Pub/Sub: 발행자 블로킹 없음
-- 전용 dispatcher task가 핸들러 실행
-- 모듈 간 느슨한 결합
- 
-## 데이터 전달 방식
-- 작은 데이터: event_t union에 직접 담음 (값 복사)
-- 큰 데이터 (RTCM 등): 이벤트는 알림만, 실제 데이터는 링버퍼에서 읽음
- 
-## 주의사항
-- 핸들러는 dispatcher task 컨텍스트에서 실행됨
-- 핸들러에서 오래 걸리는 작업 X (다른 이벤트 지연됨)
-- 새 이벤트 추가 시 event_type_t enum + union에 데이터 구조체 추가
- 
-## 확장 시 참고
-- event_types.h 분리 고려 (이벤트 타입 자주 변경 시)
-- 우선순위 필요하면 별도 큐 또는 우선순위 큐 도입
- 
-## 현재 한계/TODO
-- 우선순위 없음 (FIFO)
-- 전송 완료 확인은 이벤트 버스가 아닌 각 모듈 API로 처리
+
+모듈 간 비동기 Pub/Sub. 큐 기반만 지원.
+
+## API
+```c
+void event_bus_init(void);
+bool event_bus_subscribe(event_type_t type, QueueHandle_t queue);
+void event_bus_unsubscribe(event_type_t type, QueueHandle_t queue);
+void event_bus_publish(const event_t *event);
+```
+
+## 설정
+```c
+// event_bus.h
+#define EVENT_BUS_MAX_SUBSCRIBERS   16  // 최대 구독자 수 (연결 리스트, 개수 제한)
+```
+
+## 사용 패턴
+```c
+// 구독
+QueueHandle_t q = xQueueCreate(8, sizeof(event_t));
+event_bus_subscribe(EVENT_GPS_FIX_CHANGED, q);
+
+// 태스크에서 수신
+event_t ev;
+if (xQueueReceive(q, &ev, portMAX_DELAY) == pdTRUE) {
+    switch (ev.type) { ... }
+}
+
+// 발행
+event_t ev = { .type = EVENT_GPS_FIX_CHANGED, .data.gps_fix = {...} };
+event_bus_publish(&ev);
+
+// 해제
+event_bus_unsubscribe(EVENT_GPS_FIX_CHANGED, q);
+```
+
+## 이벤트 타입 (event_bus.h)
+| Range | Category |
+|-------|----------|
+| 0x0100 | GPS (FIX_CHANGED, GGA_UPDATE) |
+| 0x0200 | NTRIP (CONNECTED, DISCONNECTED) |
+| 0x0300 | LoRa (RTCM_FOR_LORA) |
+| 0x0F00 | System (SHUTDOWN) |
+
+## 주의
+- 큐 full → 이벤트 드랍 (로그 경고)
+- 큰 데이터는 이벤트로 알림만, 실제 데이터는 링버퍼에서 읽음
