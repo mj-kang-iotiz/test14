@@ -96,7 +96,61 @@ app/ (앱 레벨) → lib/ (HAL 래퍼) → Drivers/STM32H5xx_HAL_Driver/ (HAL)
 - FreeRTOS task에서 HAL 함수 호출 시 mutex 고려
 
 ## Testing
-<!-- 테스트 방법 추가 -->
+
+### 호스트 테스트 환경
+- **프레임워크**: Unity v2.6.0 (`test/unity/`)
+- **빌드**: CMake + 호스트 gcc (arm-gcc 아님)
+- **실행**: `bash test/run_tests.sh`
+- **상세**: `test/README.md` 참조
+
+### 테스트 분류
+- `test/unit/` — 단위 테스트 (PURE 모듈: parser, ringbuffer)
+- `test/module/` — 모듈 테스트 (MOCKABLE 모듈: gps_nmea, gps_unicore, rtcm, ble_parser)
+- `test/fixture/` — 테스트 데이터 (.h 파일, static const 배열)
+- `test/mock/` — FreeRTOS/HAL stub 헤더
+
+### 테스트 데이터 관리
+- fixture는 프로토콜별 디렉토리: `test/fixture/{nmea,rtcm,unicore}/`
+- 데이터는 `.h` 파일의 `static const` 배열로 정의
+- 네이밍: `{MSG_TYPE}_{CASE}` (예: `GGA_RTK_FIX`, `RTCM_1074_VALID`)
+
+### 파일 매핑 (소스 → 테스트)
+```
+lib/parser/parser.c          → test/unit/test_parser.c
+lib/utils/src/ringbuffer.c   → test/unit/test_ringbuffer.c
+lib/gps/gps_nmea.c           → test/module/test_gps_nmea.c
+lib/gps/gps_unicore.c        → test/module/test_gps_unicore.c
+lib/gps/rtcm.c               → test/module/test_gps_rtcm.c
+```
+
+### 태스크 수행 시 테스트 규칙
+1. `lib/` 코드 변경 시 반드시 관련 테스트 확인 (없으면 작성)
+2. 새 함수 추가 시 최소 3개 테스트: 정상, 경계, 에러
+3. 기존 파서 수정 시 regression 테스트 필수
+4. **`bash test/run_tests.sh` 실행 후 ALL PASS 확인 필수**
+5. 실패하는 테스트를 커밋하지 말 것
+
+### 테스트 작성 컨벤션
+- 파일명: `test_{모듈명}.c`
+- 함수명: `test_{동작}_{조건}` (예: `test_gga_parse_no_fix`)
+- `setUp()`/`tearDown()`에서 ringbuffer, 구조체 초기화/정리
+- fixture `#include`로 테스트 데이터 사용
+- 새 테스트 추가 시 `CMakeLists.txt`에 `add_executable` + `add_test` 등록
+
+### 태스크 md 테스트 섹션 템플릿
+태스크 파일에 다음 섹션 추가:
+```markdown
+## 테스트
+### 자동 테스트 (호스트)
+- [ ] 테스트 파일: `test/{unit|module}/test_xxx.c`
+- [ ] fixture 추가: `test/fixture/{protocol}/xxx.h` (필요 시)
+- [ ] 테스트 케이스:
+  - [ ] 정상: {설명}
+  - [ ] 경계: {설명}
+  - [ ] 에러: {설명}
+  - [ ] regression: 기존 동작 확인
+- [ ] `bash test/run_tests.sh` → ALL PASS
+```
 
 ## Documentation Structure
 - `docs/hw_spec.md` - 하드웨어 스펙
